@@ -1,4 +1,4 @@
-from aero import aerodynamicState
+from src.models.aero import aerodynamicState
 import math
 
 state = aerodynamicState(
