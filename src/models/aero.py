@@ -13,17 +13,6 @@ This file contains reusable functions for:
 
 import math 
 
-def dynamicPressure(rho: float, velocity: float):
-    return 0.5 * rho * (velocity**2)
-
-def liftForce(rho: float, velocity: float, wingArea: float, cl: float):
-    q = dynamicPressure(rho, velocity)
-    return q * wingArea * cl
-
-def dragForce(rho: float, velocity: float, wingArea: float, cd: float):
-    q = dynamicPressure(rho, velocity)
-    return q * wingArea * cd
-
 def exposedWingArea(maxArea: float, extensionRatio: float, minAreaRatio = 0.4):
     if not 0.0 <= extensionRatio <= 1.0:
         raise ValueError("extensionRatio must be between 0 and 1")
@@ -44,19 +33,21 @@ def dragCoefficient(cl: float, cd0: float = 0.02, aspectRatio: float = 8.0, oswa
 def weightForce(mass: float, gravity: float = 9.81):
     return mass * gravity
 
-def aerodynamicState(rho: float, velocity: float, maxWingArea: float, extensionRatio: float, alphaRad: float, mass: float):
-    wingArea = exposedWingArea(maxWingArea, extensionRatio)
-    cl = liftCoefficient(alphaRad)
-    cd = dragCoefficient(cl)
+class aerodynamicState:
+    def __init__(self, rho, velocity, wing, cl, cd):
+        self.rho = rho
+        self.velocity = velocity
+        self.wing = wing
+        self.cl = cl
+        self.cd = cd
 
-    lift = liftForce(rho, velocity, wingArea, cl)
-    drag = dragForce(rho, velocity, wingArea, cd)
-    weight = weightForce(mass)
+    def dyanamicPressure(self):
+        return 0.5 * self.rho * self.velocity**2
     
-    return {"Wing Area": wingArea,
-            "CL": cl,
-            "CD": cd,
-            "Lift Force": lift,
-            "Drag Force": drag,
-            "Weight": weight,
-            "Lift Margin": lift - weight}
+    def lift(self):
+        return self.dyanamicPressure() * self.wing.area() * self.cl
+    
+    def drag(self):
+        return self.dyanamicPressure() * self.wing.area() * self.cd
+    
+    
