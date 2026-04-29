@@ -25,11 +25,3 @@ print("Lift Force:", forces.lift())
 print("Drag Force:", forces.drag())
 print("Weight:", forces.weight())
 print("Thrust:", forces.thrustForce())
-
-# Apply equilibrium equations
-
-netForceX = forces.thrustForce() - forces.drag()
-netForceY = forces.lift() - forces.weight()
-
-print("Net Force in X:", netForceX)
-print("Net Force in Y:", netForceY)
