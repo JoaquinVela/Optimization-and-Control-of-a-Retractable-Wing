@@ -6,12 +6,15 @@ wing = wingGeometry(span = 10, chord = 2)
 
 aero = aerodynamicState(
     rho = 1.225,
-    velocity = 50,
+    velocity = 145,
     wing = wing,
-    cl = 0.5,
-    cd = 0.03
+    cl0 = 0,
+    cd0 = 0.02,
+    alphaRad = 0.0872665,
+    deployment = 1
 )
 
-print("Wing Area:", wing.area())
-print("Lift:", aero.lift())
-print("Drag:", aero.drag())
+print("Wing Area:", aero.exposedWingArea())
+print("Aspect Ratio:", wing.aspectRatio())
+print("Lift Coefficient:", aero.liftCoefficient())
+print("Drag Coefficient:", aero.dragCoefficient())
