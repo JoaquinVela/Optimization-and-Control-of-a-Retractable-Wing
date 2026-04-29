@@ -3,6 +3,7 @@ from src.models.aero import aerodynamicState
 from src.models.plane import planeProperties
 from src.models.forces import aerodynamicsForce
 from src.models.performance import aerodynamicPerformance
+from src.control.validation import physicalValidation
 
 wing = wingGeometry(span = 10, chord = 1)
 
@@ -27,3 +28,6 @@ print("Horizontal Net Force:", aeroPerformance.netForceX())
 print("Vertical Net Force:", aeroPerformance.netForceY())
 print("Horizontal Acceleration:", aeroPerformance.accX())
 print("Vertical Acceleration:", aeroPerformance.accY())
+
+validation = physicalValidation(aeroState, plane, forces, aeroPerformance)
+validation.runAllChecks()
