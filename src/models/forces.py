@@ -10,8 +10,10 @@ This file contains reusable functions for:
 """
 
 class aerodynamicsForce:
-    def __init__(self, state):
+    def __init__(self, state, plane, thrust):
         self.state = state
+        self.plane = plane
+        self.thrust = thrust
 
     def dynamicPressure(self):
         rho = self.state.rho
@@ -29,3 +31,9 @@ class aerodynamicsForce:
         s = self.state.exposedWingArea()
         CD = self.state.dragCoefficient()
         return q * s * CD
+    
+    def weight(self):
+        return self.plane.weight()
+    
+    def thrustForce(self):
+        return self.thrust
