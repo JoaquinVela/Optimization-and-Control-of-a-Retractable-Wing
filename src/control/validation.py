@@ -1,10 +1,14 @@
 """
 validation.py
 
-BBasic physics validation for a retractable wing optimization project.
+Basic physics validation for a retractable wing optimization project.
 
 This file contains reusable functions for:
-- TBD
+- positive value logic check
+- valid force range check
+- valid performance check
+- valid weight check
+- More to come?
 """
 
 class physicalValidation:
