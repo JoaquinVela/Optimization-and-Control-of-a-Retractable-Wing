@@ -30,3 +30,15 @@ class aerodynamicPerformance:
     def accY(self):
         return self.netForceY() / self.forces.plane.mass
     
+    def isLevelFlight(self, tolerance = 0.05):
+        lift = self.forces.lift()
+        weight = self.forces.weight()
+        percentDiff = abs(lift - weight) / weight
+        return percentDiff <= tolerance
+    
+    def isSteadySpeed(self, tolerance = 0.05):
+        thrust = self.forces.thrustForce()
+        drag = self.forces.drag()
+        percentDiff = abs(thrust - drag) / drag
+        return percentDiff <= tolerance
+    
