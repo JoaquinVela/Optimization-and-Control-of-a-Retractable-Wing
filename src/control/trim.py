@@ -4,7 +4,9 @@ trim.py
 Search for values that make steady flight and speed for a retractable wing optimization project.
 
 This file contains reusable functions for:
-- TBD
+- trim checker
+- is trimmed
+- trim result
 """
 
 class trimResult:
