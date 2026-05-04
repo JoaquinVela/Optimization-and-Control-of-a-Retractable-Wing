@@ -21,6 +21,7 @@ class flightSimulation:
 
         self.timeHistory = []
         self.altitudeHistory = []
+        self.velocityYHistory = []
         self.alphaRadHistory = []
         self.clHistory = []
         self.liftHistory = []
@@ -55,6 +56,7 @@ class flightSimulation:
         # 6: Save the data
         self.timeHistory.append(time)
         self.altitudeHistory.append(self.altitude)
+        self.velocityYHistory.append(self.velocityY)
         self.alphaRadHistory.append(self.aeroState.alphaRad)
         self.clHistory.append(self.aeroState.liftCoefficient())
         self.liftHistory.append(forces.lift())
@@ -69,6 +71,7 @@ class flightSimulation:
         return {
             "time": self.timeHistory,
             "altitude": self.altitudeHistory,
+            "velocityY": self.velocityYHistory,
             "alphaRad": self.alphaRadHistory,
             "cl": self.clHistory,
             "lift": self.liftHistory,

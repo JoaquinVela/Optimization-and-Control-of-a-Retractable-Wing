@@ -30,7 +30,7 @@ sim = flightSimulation(
     plane=plane,
     controller=controller,
     thrust=242476.37271298046,
-    altitude=10600,
+    altitude=10650,
     velocityY=0
 )
 
@@ -40,14 +40,51 @@ results = sim.run(
 )
 
 print("Final Altitude:", results["altitude"][-1])
+print("Final Vertical Velocity:", results["velocityY"][-1])
 print("Final AlphaRad:", results["alphaRad"][-1])
 print("Final CL:", results["cl"][-1])
 print("Final Lift:", results["lift"][-1])
 print("Final Weight:", results["weight"][-1])
 
+plt.figure()
 plt.plot(results["time"], results["altitude"])
 plt.xlabel("Time [s]")
 plt.ylabel("Altitude [m]")
 plt.title("Altitude Hold Controller Test")
+plt.grid()
+plt.show()
+
+plt.figure()
+plt.plot(results["time"], results["velocityY"])
+plt.axhline(0, linestyle="--")
+plt.xlabel("Time [s]")
+plt.ylabel("Vertical Velocity [m/s]")
+plt.title("Vertical Velocity vs. Time")
+plt.grid()
+plt.show()
+
+plt.figure()
+plt.plot(results["time"], results["alphaRad"])
+plt.xlabel("Time [s]")
+plt.ylabel("Angle of Attack [rad]")
+plt.title("Angle of Attack vs. Time")
+plt.grid()
+plt.show()
+
+plt.figure()
+plt.plot(results["time"], results["cl"])
+plt.xlabel("Time [s]")
+plt.ylabel("Coefficient of Lift")
+plt.title("CL vs. Time")
+plt.grid()
+plt.show()
+
+plt.figure()
+plt.plot(results["time"], results["lift"], label="Lift")
+plt.plot(results["time"], results["weight"], label="Weight")
+plt.xlabel("Time [s]")
+plt.ylabel("Force [N]")
+plt.title("Lift vs. Weight")
+plt.legend()
 plt.grid()
 plt.show()

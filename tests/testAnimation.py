@@ -1,12 +1,13 @@
+import matplotlib.pyplot as plt
 from src.simulation.flightSim import flightSimulation
-from src.simulation.animation import flightAnimation
-from src.control.trim import trimChecker
 from src.models.geometry import wingGeometry
 from src.models.aero import aerodynamicState
 from src.models.plane import planeProperties
 from src.models.forces import aerodynamicsForce
 from src.models.performance import aerodynamicPerformance
-from src.control.validation import physicalValidation
+from src.control.trim import trimChecker
+from src.control.control import altitudeHoldController
+from src.simulation.animation import flightAnimation
 
 wing = wingGeometry(span = 64.8, chord = 13.36)
 aeroState = aerodynamicState(
@@ -20,20 +21,14 @@ aeroState = aerodynamicState(
 )
 mass = 274669.280707
 plane = planeProperties(mass)
+controller = altitudeHoldController(trimAlphaRad=aeroState.alphaRad, targetAltitude=10668)
+    
 forces = aerodynamicsForce(aeroState, plane, thrust = 242476.37271298046)
 aeroPerformance = aerodynamicPerformance(forces)
-trim = trimChecker(aeroPerformance)
 
-sim = flightSimulation(aeroPerformance, dt = 0.1)
+sim = flightSimulation(aeroState, plane, controller, thrust=242476.37271298046, altitude=10600)
 
-initialState = {
-    "x": 0,
-    "y": 10668,
-    "vx": forces.state.velocity,
-    "vy": 0
-}
-
-history = sim.run(initialState, steps = 200)
+history = sim.run(totalTime=1000, dt=0.1)
 
 animation = flightAnimation(history)
 animation.animate()
