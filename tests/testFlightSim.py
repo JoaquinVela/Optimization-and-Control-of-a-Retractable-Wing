@@ -15,8 +15,7 @@ aeroState = aerodynamicState(
     wing = wing,
     cl0 = 0.2,
     cd0 = 0.02,
-    alphaRad = 0.0174533,
-    deployment = 1
+    alphaRad = 0.0174533
 )
 mass = 274669.280707
 plane = planeProperties(mass)
@@ -30,7 +29,8 @@ sim = flightSimulation(
     plane=plane,
     controller=controller,
     thrust=242476.37271298046,
-    altitude=10650,
+    altitude=10668,
+    velocity=250,
     velocityY=0
 )
 

@@ -9,13 +9,20 @@ This file contains reusable functions for:
 """
 
 class wingGeometry:
-    def __init__(self, span, chord):
+    def __init__(self, span, chord, deployment=1.0):
         self.span = span 
-        self.chord = chord 
+        self.chord = chord
+        self.deployment = deployment 
 
     def area(self):
         return self.span * self.chord
     
+    def exposedWingArea(self):
+        return self.deployment * self.area()
+    
     def aspectRatio(self): 
-        return self.span**2 / self.area()
+        return self.span**2 / self.exposedWingArea()
+    
+    def setDeployment(self, deployment):
+        self.deployment = max(0.3, min(1.0, deployment))
     

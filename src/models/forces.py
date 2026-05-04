@@ -22,13 +22,13 @@ class aerodynamicsForce:
     
     def lift(self):
         q = self.dynamicPressure()
-        s = self.state.exposedWingArea()
+        s = self.state.wing.exposedWingArea()
         CL = self.state.liftCoefficient() 
         return q * s * CL
     
     def drag(self):
         q = self.dynamicPressure()
-        s = self.state.exposedWingArea()
+        s = self.state.wing.exposedWingArea()
         CD = self.state.dragCoefficient()
         return q * s * CD
     
