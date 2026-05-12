@@ -30,7 +30,7 @@ sim = flightSimulation(
     controller=controller,
     thrust=242476.37271298046,
     altitude=10668,
-    velocity=250,
+    velocity=230,
     velocityY=0
 )
 
@@ -40,6 +40,7 @@ results = sim.run(
 )
 
 print("Final Altitude:", results["altitude"][-1])
+print("Final Horizonal Velocity:", results["velocity"][-1])
 print("Final Vertical Velocity:", results["velocityY"][-1])
 print("Final AlphaRad:", results["alphaRad"][-1])
 print("Final CL:", results["cl"][-1])
@@ -51,6 +52,14 @@ plt.plot(results["time"], results["altitude"])
 plt.xlabel("Time [s]")
 plt.ylabel("Altitude [m]")
 plt.title("Altitude Hold Controller Test")
+plt.grid()
+plt.show()
+
+plt.figure()
+plt.plot(results["time"], results["velocity"])
+plt.xlabel("Time [s]")
+plt.ylabel("Velocity [m/s]")
+plt.title("Velocity vs. Time")
 plt.grid()
 plt.show()
 

@@ -8,34 +8,39 @@ This file contains reusable functions for:
 """
 
 class cruiseSchedule:
-    def __init__(self, maxAltitude=12496.8, machCutoff=1.15, minDeployment=0.3, maxDeployment=1.0):
+    def __init__(self, maxAltitude=12496.8, machCutoff=1.15, minDeployment=0.3, maxDeployment=1.0, altitudeStep=100.0, machDeadband=0.005):
         self.maxAltitude = maxAltitude
         self.machCutoff = machCutoff
         self.minDeployment = minDeployment
         self.maxDeployment = maxDeployment
+        self.altitudeStep = altitudeStep
+        self.machDeadband = machDeadband
 
     def chooseTarget(self, altitude, velocity, atmosphere, deployment):
         mach = atmosphere.machNumber(velocity)
+        safeMachMargin = 0.98 * self.machCutoff
         targetAltitude = altitude
-        deployment = deployment
-        safeMachMargin = 0.97 * self.machCutoff
+        targetDeployment = deployment
 
-        if mach < safeMachMargin:
-            deployment -= 0.01
-            targetAltitude += 2.0
+        if mach < safeMachMargin - self.machDeadband:
+            if deployment > self.minDeployment:
+                targetDeployment = deployment - 0.01
+            else: 
+                targetAltitude = altitude + self.altitudeStep
 
-        elif mach > safeMachMargin:
-            deployment += 0.02
-            targetAltitude += 5.0
+        elif mach > safeMachMargin + self.machDeadband:
+            targetDeployment = deployment + 0.01
+            targetAltitude = altitude
 
         else:
-            deployment = deployment
+            targetAltitude = altitude
+            targetDeployment = deployment
 
         targetAltitude = min(targetAltitude, self.maxAltitude)
 
-        deployment = max(
+        targetDeployment = max(
             self.minDeployment,
-            min(self.maxDeployment, deployment)
+            min(self.maxDeployment, targetDeployment)
         )
 
-        return targetAltitude, deployment, mach
+        return targetAltitude, targetDeployment, mach

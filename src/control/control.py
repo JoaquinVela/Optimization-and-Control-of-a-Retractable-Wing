@@ -7,6 +7,8 @@ This file contains reusable functions for:
 - TBD
 """
 
+import math
+
 class altitudeHoldController:
     def __init__(self, targetAltitude, trimAlphaRad, kp=0.00002, kd=0.002, minAlphaRad=0.0, maxAlphaRad=0.15):
         self.targetAltitude = targetAltitude
@@ -19,11 +21,23 @@ class altitudeHoldController:
     def altitudeError(self, currentAltitude):
         return self.targetAltitude - currentAltitude
     
-    def command(self, currentAltitude, currentVelocityY):
+    def dynamicTrimAlpha(self, aeroState, plane):
+        q = 0.5 * aeroState.rho * aeroState.velocity**2
+        s = aeroState.wing.exposedWingArea()
+        requiredCL = plane.weight() / (q * s)
+        liftSlope = 2 * math.pi
+        return (requiredCL - aeroState.cl0) / liftSlope
+    
+    def command(self, currentAltitude, currentVelocityY, aeroState=None, plane=None):
         error = self.altitudeError(currentAltitude)
 
+        if aeroState is not None and plane is not None:
+            trimAlphaRad = self.dynamicTrimAlpha(aeroState, plane)
+        else:
+            trimAlphaRad = self.trimAlphaRad
+
         alphaCorrection = self.kp * error - self.kd * currentVelocityY
-        alphaCommand = self.trimAlphaRad + alphaCorrection
+        alphaCommand = trimAlphaRad + alphaCorrection
 
         if alphaCommand > self.maxAlphaRad:
             alphaCommand = self.maxAlphaRad

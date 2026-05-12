@@ -54,13 +54,17 @@ class flightSimulation:
             self.wing.deployment
         )
 
+        self.controller.targetAltitude = targetAltitude
+
         # 4 Apply wing geometry change
         self.wing.setDeployment(targetDeployment)
 
         # 5 Controller decides new angle of attack
         newAlphaRad = self.controller.command(
             currentAltitude=self.altitude,
-            currentVelocityY=self.velocityY
+            currentVelocityY=self.velocityY,
+            aeroState=self.aeroState,
+            plane=self.plane
         )
 
         # 6 Update aerostate
@@ -88,7 +92,7 @@ class flightSimulation:
         altitudeError = targetAltitude - self.altitude
         altitudeRateCommand = 0.02 * altitudeError
         altitudeRateCommand = max(-5.0, min(5.0, altitudeRateCommand))
-        self.altitude += altitudeRateCommand * dt
+        # self.altitude += altitudeRateCommand * dt <-- Removed
 
         # 11 Save the data
         self.timeHistory.append(time)
