@@ -11,7 +11,7 @@ from src.control.control import altitudeHoldController
 wing = wingGeometry(span = 64.8, chord = 13.36)
 aeroState = aerodynamicState(
     rho = 0.380,
-    velocity = 230,
+    velocity = 300,
     wing = wing,
     cl0 = 0.2,
     cd0 = 0.02,
@@ -29,8 +29,7 @@ sim = flightSimulation(
     plane=plane,
     controller=controller,
     thrust=242476.37271298046,
-    altitude=10668,
-    velocity=230,
+    altitude=12000,
     velocityY=0
 )
 
@@ -58,8 +57,16 @@ plt.show()
 plt.figure()
 plt.plot(results["time"], results["velocity"])
 plt.xlabel("Time [s]")
-plt.ylabel("Velocity [m/s]")
-plt.title("Velocity vs. Time")
+plt.ylabel("VelocityX [m/s]")
+plt.title("VelocityX vs. Time")
+plt.grid()
+plt.show()
+
+plt.figure()
+plt.plot(results["time"], results["totalVelocity"])
+plt.xlabel("Time [s]")
+plt.ylabel("Total Velocity [m/s]")
+plt.title("Total Velocity vs. Time")
 plt.grid()
 plt.show()
 
