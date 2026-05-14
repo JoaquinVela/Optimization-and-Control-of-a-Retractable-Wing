@@ -23,6 +23,9 @@ class cruiseAtmosphere:
         lapseRate = 0.0065 # K/m
         return seaLevelTemp - lapseRate * self.altitudeMeters
     
+    def temperatureGradient(self):
+        return -0.0065
+    
     def pressure(self):
         # ISA pressure model
         seaLevelPressure = 101325 # Pa

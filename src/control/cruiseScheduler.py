@@ -7,6 +7,9 @@ This file contains reusable functions for:
 - choose target
 """
 
+from src.models.boomless import boomlessConstraint
+from src.models.atmosphere import cruiseAtmosphere
+
 class cruiseSchedule:
     def __init__(self, maxAltitude=12496.8, machCutoff=1.15, minDeployment=0.3, maxDeployment=1.0, altitudeStep=100.0, machDeadband=0.005):
         self.maxAltitude = maxAltitude
