@@ -42,7 +42,7 @@ class flightSimulation:
         self.accXHistory = []
         self.accYHistory = []
         self.machHistory = []
-        self.machCutoffHistory = []
+        self.cutoffAltitudeHistory = []
         self.deploymentHistory = []
         self.targetAltitudeHistory = []
 
@@ -111,6 +111,16 @@ class flightSimulation:
         if self.altitude < 0:
             self.altitude = 0
             self.velocityY = 0
+        
+        loggedAtmosphere = cruiseAtmosphere(self.altitude)
+        loggedTotalVelocity = self.totalVelocity()
+        loggedMach = loggedAtmosphere.machNumber(loggedTotalVelocity)
+
+        cutoffAltitude = self.scheduler.boomless.cutoffAltitudeAGL(
+            self.altitude,
+            loggedMach,
+            loggedAtmosphere
+        )
 
         # 11 Save the data
         self.timeHistory.append(time)
@@ -128,8 +138,8 @@ class flightSimulation:
         self.netYHistory.append(netForceY)
         self.accXHistory.append(accX)
         self.accYHistory.append(accY)
-        self.machHistory.append(mach)
-        self.machCutoffHistory.append(self.scheduler.machCutoff)
+        self.machHistory.append(loggedMach)
+        self.cutoffAltitudeHistory.append(cutoffAltitude)
         self.deploymentHistory.append(self.wing.deployment)
         self.targetAltitudeHistory.append(targetAltitude)
 
@@ -156,7 +166,7 @@ class flightSimulation:
             "accX": self.accXHistory,
             "accY": self.accYHistory,
             "mach": self.machHistory,
-            "machCutoff": self.machCutoffHistory,
+            "cutoffAltitude": self.cutoffAltitudeHistory,
             "deployment": self.deploymentHistory,
             "targetAltitude": self.targetAltitudeHistory
         }

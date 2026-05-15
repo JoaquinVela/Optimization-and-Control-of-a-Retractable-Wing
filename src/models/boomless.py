@@ -1,6 +1,15 @@
+"""
+boomless.py
+
+Boomless constraint for a retractable wing optimization project.
+
+This file contains reusable functions for:
+- TBD
+"""
+
 class boomlessConstraint:
     def __init__(self, minCutoffAltitudeAGL=30):
-        self.minCutoffAltitude=minCutoffAltitudeAGL
+        self.minCutoffAltitudeAGL=minCutoffAltitudeAGL
 
     def cutoffAltitudeAGL(self, altitude, mach, atmosphere):
         if mach <= 1.0:

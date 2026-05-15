@@ -10,11 +10,10 @@ aero = aerodynamicState(
     wing = wing,
     cl0 = 0,
     cd0 = 0.02,
-    alphaRad = 0.0872665,
-    deployment = 1
+    alphaRad = 0.0872665
 )
 
-print("Wing Area:", aero.exposedWingArea())
+print("Wing Area:", wing.exposedWingArea())
 print("Aspect Ratio:", wing.aspectRatio())
 print("Lift Coefficient:", aero.liftCoefficient())
 print("Drag Coefficient:", aero.dragCoefficient())
