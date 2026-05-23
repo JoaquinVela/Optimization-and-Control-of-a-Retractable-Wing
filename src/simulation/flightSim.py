@@ -11,17 +11,22 @@ from src.models.forces import aerodynamicsForce
 from src.models.performance import aerodynamicPerformance
 from src.models.atmosphere import cruiseAtmosphere
 from src.control.cruiseScheduler import cruiseSchedule
+from src.control.thrustController import thrustControl
 
 class flightSimulation:
-    def __init__(self, aeroState, plane, controller, thrust, altitude, velocityY=0):
+    def __init__(self, aeroState, plane, controller, maxThrust, altitude, velocityY=0, maxThrustRateFraction=0.05):
         self.aeroState = aeroState
         self.plane = plane
         self.controller = controller
-        self.thrust = thrust
+        self.maxThrust = maxThrust
+        self.requestedThrust = self.maxThrust
+        self.thrust = 0.25 * self.maxThrust
+        self.thrustController = thrustControl(self.maxThrust)
         self.altitude = altitude
         self.velocity = aeroState.velocity
         self.velocityY = velocityY
         self.positionX = 0
+        self.maxThrustRateFraction = maxThrustRateFraction
 
         self.scheduler = cruiseSchedule()
         self.wing = self.aeroState.wing
@@ -37,6 +42,7 @@ class flightSimulation:
         self.liftHistory = []
         self.dragHistory = []
         self.weightHistory = []
+        self.thrustHistory = []
         self.netXHistory = []
         self.netYHistory = []
         self.accXHistory = []
@@ -66,6 +72,20 @@ class flightSimulation:
             self.wing.deployment
         )
 
+        proposedArea = targetDeployment * self.wing.area()
+        dynamicPressure = 0.5 * atmosphere.density() * totalVelocity**2
+
+        requiredCL = self.plane.weight() / (dynamicPressure * proposedArea)
+        liftSlope = 2 * 3.141592653589793
+        requiredAlphaRad = (requiredCL - self.aeroState.cl0) / liftSlope
+
+        alphaMargin = 0.02
+        maxUsableAlphaRad = self.controller.maxAlphaRad - alphaMargin
+
+        if requiredAlphaRad > maxUsableAlphaRad:
+            targetDeployment = self.wing.deployment
+
+        self.aeroState.mach = mach
         self.controller.targetAltitude = targetAltitude
 
         # 4 Apply wing geometry change
@@ -79,10 +99,47 @@ class flightSimulation:
             plane=self.plane
         )
 
+        maxAlphaRate = 0.01 # rad/s
+        maxAlphaChange = maxAlphaRate * dt
+
+        alphaError = newAlphaRad - self.aeroState.alphaRad
+
+        if alphaError > maxAlphaChange:
+            newAlphaRad = self.aeroState.alphaRad + maxAlphaChange
+        elif alphaError < -maxAlphaChange:
+            newAlphaRad = self.aeroState.alphaRad - maxAlphaChange
+
         # 6 Update aerostate
         self.aeroState.alphaRad = newAlphaRad
 
-        # 7 Recalculate forces
+        # 7 Limit thrust based on current flight phase 
+        if time == 0.0: 
+            targetThrust = self.thrustController.cruisePowerLimit * self.maxThrust
+        else:
+            requestedThrust = self.thrustController.requestedThrustForAltitude(
+                currentAltitude=self.altitude,
+                targetAltitude=targetAltitude
+            )
+
+            targetThrust = self.thrustController.command(
+                requestedThrust=requestedThrust,
+                currentAltitude=self.altitude,
+                targetAltitude=targetAltitude
+            )
+            
+        maxThrustRate = self.maxThrustRateFraction * self.maxThrust #N/s
+        maxThrustChange = maxThrustRate * dt
+
+        thrustError = targetThrust - self.thrust
+
+        if thrustError > maxThrustChange:
+            self.thrust = self.thrust + maxThrustChange
+        elif thrustError < -maxThrustChange:
+            self.thrust = self.thrust - maxThrustChange
+        else:
+            self.thrust = targetThrust
+
+        # 8 Recalculate forces
         forces = aerodynamicsForce(
             self.aeroState,
             self.plane,
@@ -91,22 +148,27 @@ class flightSimulation:
 
         performance = aerodynamicPerformance(forces)
 
-        # 8 Get Forces
+        # 9 Get Forces
         lift = forces.lift()
         drag = forces.drag()
         weight = forces.weight()
         netForceX = performance.netForceX()
         netForceY = performance.netForceY()
 
-        # 9 Get accelerations
+        # 10 Get accelerations
         accY = performance.accY()
         accX = performance.accX()
 
-        # 10 Update velocity and altitude
+        # 11 Update velocity and altitude
         self.velocity = self.velocity + accX * dt
         self.velocityY = self.velocityY + accY * dt
         self.altitude = self.altitude + self.velocityY * dt
         self.positionX = self.positionX + self.velocity * dt
+
+        if self.altitude > self.scheduler.maxAltitude:
+            self.altitude = self.scheduler.maxAltitude
+            if self.velocityY > 0:
+                self.velocityY = 0
 
         if self.altitude < 0:
             self.altitude = 0
@@ -122,7 +184,7 @@ class flightSimulation:
             loggedAtmosphere
         )
 
-        # 11 Save the data
+        # 12 Save the data
         self.timeHistory.append(time)
         self.altitudeHistory.append(self.altitude)
         self.positionXHistory.append(self.positionX)
@@ -134,6 +196,7 @@ class flightSimulation:
         self.liftHistory.append(lift)
         self.dragHistory.append(drag)
         self.weightHistory.append(weight)
+        self.thrustHistory.append(self.thrust)
         self.netXHistory.append(netForceX)
         self.netYHistory.append(netForceY)
         self.accXHistory.append(accX)
@@ -161,6 +224,7 @@ class flightSimulation:
             "lift": self.liftHistory,
             "drag": self.dragHistory,
             "weight": self.weightHistory,
+            "thrust": self.thrustHistory,
             "netX": self.netXHistory,
             "netY": self.netYHistory,
             "accX": self.accXHistory,

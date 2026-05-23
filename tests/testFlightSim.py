@@ -8,27 +8,28 @@ from src.models.performance import aerodynamicPerformance
 from src.control.trim import trimChecker
 from src.control.control import altitudeHoldController
 
-wing = wingGeometry(span = 64.8, chord = 13.36)
+wing = wingGeometry(span = 64.8, chord = 6.98)
 aeroState = aerodynamicState(
     rho = 0.380,
-    velocity = 300,
+    velocity = 248,
     wing = wing,
     cl0 = 0.2,
     cd0 = 0.02,
-    alphaRad = 0.0174533
+    alphaRad = 0.075
 )
 mass = 274669.280707
+planeMaxThrust = 1026000
 plane = planeProperties(mass)
 controller = altitudeHoldController(trimAlphaRad=aeroState.alphaRad, targetAltitude=10668)
     
-forces = aerodynamicsForce(aeroState, plane, thrust = 242476.37271298046)
+forces = aerodynamicsForce(aeroState, plane, thrust = planeMaxThrust * 0.25)
 aeroPerformance = aerodynamicPerformance(forces)
 
 sim = flightSimulation(
     aeroState=aeroState,
     plane=plane,
     controller=controller,
-    thrust=242476.37271298046,
+    maxThrust=planeMaxThrust,
     altitude=12000,
     velocityY=0
 )
@@ -45,6 +46,8 @@ print("Final AlphaRad:", results["alphaRad"][-1])
 print("Final CL:", results["cl"][-1])
 print("Final Lift:", results["lift"][-1])
 print("Final Weight:", results["weight"][-1])
+print("Final Thrust:", results["thrust"][-1])
+print("Final Deployment:", results["deployment"][-1])
 
 plt.figure()
 plt.plot(results["time"], results["altitude"])
@@ -63,14 +66,6 @@ plt.grid()
 plt.show()
 
 plt.figure()
-plt.plot(results["time"], results["totalVelocity"])
-plt.xlabel("Time [s]")
-plt.ylabel("Total Velocity [m/s]")
-plt.title("Total Velocity vs. Time")
-plt.grid()
-plt.show()
-
-plt.figure()
 plt.plot(results["time"], results["velocityY"])
 plt.axhline(0, linestyle="--")
 plt.xlabel("Time [s]")
@@ -80,27 +75,17 @@ plt.grid()
 plt.show()
 
 plt.figure()
-plt.plot(results["time"], results["alphaRad"])
+plt.plot(results["time"], results["thrust"])
 plt.xlabel("Time [s]")
-plt.ylabel("Angle of Attack [rad]")
-plt.title("Angle of Attack vs. Time")
+plt.ylabel("Thrust [N]")
+plt.title("Thrust vs. Time")
 plt.grid()
 plt.show()
 
 plt.figure()
-plt.plot(results["time"], results["cl"])
+plt.plot(results["time"], results["deployment"])
 plt.xlabel("Time [s]")
-plt.ylabel("Coefficient of Lift")
-plt.title("CL vs. Time")
-plt.grid()
-plt.show()
-
-plt.figure()
-plt.plot(results["time"], results["lift"], label="Lift")
-plt.plot(results["time"], results["weight"], label="Weight")
-plt.xlabel("Time [s]")
-plt.ylabel("Force [N]")
-plt.title("Lift vs. Weight")
-plt.legend()
+plt.ylabel("Deployment")
+plt.title("Deployment vs. Time")
 plt.grid()
 plt.show()

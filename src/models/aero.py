@@ -28,5 +28,15 @@ class aerodynamicState:
     def dragCoefficient(self): 
         ar = self.wing.aspectRatio() 
         inducedDrag = (self.liftCoefficient())**2 / (math.pi * ar * self.oswaldEfficiency)
-        return self.cd0 + inducedDrag
+        cd = self.cd0 + inducedDrag
+
+        mach = getattr(self, "mach", None)
+        if mach is None:
+            mach = self.velocity / 295.0
+
+        if mach > 0.85:
+            waveDrag = 0.08 * (mach - 0.85)**2
+            cd = cd + waveDrag
+
+        return cd
 

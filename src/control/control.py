@@ -10,7 +10,7 @@ This file contains reusable functions for:
 import math
 
 class altitudeHoldController:
-    def __init__(self, targetAltitude, trimAlphaRad, kp=0.00002, kd=0.002, minAlphaRad=0.0, maxAlphaRad=0.15):
+    def __init__(self, targetAltitude, trimAlphaRad, kp=0.00002, kd=0.002, minAlphaRad=-0.05, maxAlphaRad=0.15):
         self.targetAltitude = targetAltitude
         self.trimAlphaRad = trimAlphaRad
         self.kp = kp
