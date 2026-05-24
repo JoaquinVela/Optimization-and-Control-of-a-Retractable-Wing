@@ -2,9 +2,6 @@ from src.simulation.flightSim import flightSimulation
 from src.models.geometry import wingGeometry
 from src.models.aero import aerodynamicState
 from src.models.plane import planeProperties
-from src.models.forces import aerodynamicsForce
-from src.models.performance import aerodynamicPerformance
-from src.control.trim import trimChecker
 from src.control.control import altitudeHoldController
 
 def runCandidate(params):
@@ -25,7 +22,12 @@ def runCandidate(params):
 
     plane = planeProperties(params["mass"])
 
-    controller = altitudeHoldController(trimAlphaRad=params["initialAlphaRad"], targetAltitude=params["targetAltitude"])
+    controller = altitudeHoldController(
+        trimAlphaRad=params["initialAlphaRad"],
+        targetAltitude=params["targetAltitude"],
+        kp=params.get("kp", 0.00002),
+        kd=params.get("kd", 0.002)
+    )
 
     sim = flightSimulation(
     aeroState=aeroState,
@@ -33,11 +35,12 @@ def runCandidate(params):
     controller=controller,
     maxThrust=params["maxThrust"],
     altitude=params["initialAltitude"],
-    velocityY=params.get("initialVelocityY", 0)
+    velocityY=params.get("initialVelocityY", 0),
+    cruisePowerLimit=params.get("cruisePowerLimit", 0.25)
     )
 
     return sim.run(
-        totalTime=params.get("totalTime", 5000),
+        totalTime=params.get("totalTime", 3000),
         dt=params.get("dt", 0.1)
     )
 
@@ -52,6 +55,8 @@ def evaluateCandidate(params):
     maxAlphaRad = max(results["alphaRad"])
     maxAltitude = max(results["altitude"])
     minCutoffAltitude = min(results["cutoffAltitude"])
+    averageThrust = sum(results["thrust"]) / len(results["thrust"])
+    thrustFraction = averageThrust / params["maxThrust"]
     finalAltitudeError  = abs(finalAltitude - params["targetAltitude"])
 
     valid = (
@@ -74,6 +79,8 @@ def evaluateCandidate(params):
         "valid": valid,
         "maxAltitude": maxAltitude,
         "minCutoffAltitude": minCutoffAltitude,
+        "averageThrust": averageThrust,
+        "thrustFraction": thrustFraction,
         "finalAltitudeError": finalAltitudeError,
         "results": results
     }
@@ -92,7 +99,7 @@ if __name__ == "__main__":
         "maxThrust": 1026000,
         "initialAltitude": 12000,
         "targetAltitude": 10668,
-        "totalTime": 5000,
+        "totalTime": 3000,
         "dt": 0.1
     }
 

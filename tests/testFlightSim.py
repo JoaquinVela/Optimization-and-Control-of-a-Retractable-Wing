@@ -20,7 +20,7 @@ aeroState = aerodynamicState(
 mass = 274669.280707
 planeMaxThrust = 1026000
 plane = planeProperties(mass)
-controller = altitudeHoldController(trimAlphaRad=aeroState.alphaRad, targetAltitude=10668)
+controller = altitudeHoldController(trimAlphaRad=aeroState.alphaRad, targetAltitude=12668)
     
 forces = aerodynamicsForce(aeroState, plane, thrust = planeMaxThrust * 0.25)
 aeroPerformance = aerodynamicPerformance(forces)

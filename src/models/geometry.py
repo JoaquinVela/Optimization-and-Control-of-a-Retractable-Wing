@@ -25,4 +25,6 @@ class wingGeometry:
     
     def setDeployment(self, deployment):
         self.deployment = max(0.3, min(1.0, deployment))
+
+
     

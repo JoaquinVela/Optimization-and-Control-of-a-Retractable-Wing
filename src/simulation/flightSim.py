@@ -14,14 +14,17 @@ from src.control.cruiseScheduler import cruiseSchedule
 from src.control.thrustController import thrustControl
 
 class flightSimulation:
-    def __init__(self, aeroState, plane, controller, maxThrust, altitude, velocityY=0, maxThrustRateFraction=0.05):
+    def __init__(self, aeroState, plane, controller, maxThrust, altitude, velocityY=0, maxThrustRateFraction=0.05, cruisePowerLimit=0.25):
         self.aeroState = aeroState
         self.plane = plane
         self.controller = controller
         self.maxThrust = maxThrust
         self.requestedThrust = self.maxThrust
         self.thrust = 0.25 * self.maxThrust
-        self.thrustController = thrustControl(self.maxThrust)
+        self.thrustController = thrustControl(
+            self.maxThrust,
+            cruisePowerLimit=cruisePowerLimit
+        )
         self.altitude = altitude
         self.velocity = aeroState.velocity
         self.velocityY = velocityY
