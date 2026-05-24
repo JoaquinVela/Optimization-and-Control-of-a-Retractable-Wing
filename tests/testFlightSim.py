@@ -35,7 +35,7 @@ sim = flightSimulation(
 )
 
 results = sim.run(
-    totalTime=1500,
+    totalTime=5000,
     dt=0.1
 )
 

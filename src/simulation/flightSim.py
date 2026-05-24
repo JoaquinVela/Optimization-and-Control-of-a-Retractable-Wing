@@ -28,7 +28,7 @@ class flightSimulation:
         self.positionX = 0
         self.maxThrustRateFraction = maxThrustRateFraction
 
-        self.scheduler = cruiseSchedule()
+        self.scheduler = cruiseSchedule(targetAltitude=controller.targetAltitude)
         self.wing = self.aeroState.wing
 
         self.timeHistory = []
@@ -71,6 +71,28 @@ class flightSimulation:
             atmosphere,
             self.wing.deployment
         )
+
+        cutoffAltitude = self.scheduler.boomless.cutoffAltitudeAGL(
+            self.altitude, 
+            mach,
+            atmosphere
+        )
+
+        boomlessHardLimit = (
+            self.scheduler.boomless.minCutoffAltitudeAGL + self.scheduler.boomlessSafetyMargin
+        )
+
+        boomlessSoftLimit = (
+            self.scheduler.boomless.minCutoffAltitudeAGL + 3.0 * self.scheduler.boomlessSafetyMargin
+        )
+
+        if cutoffAltitude < boomlessSoftLimit:
+            boomlessFraction = (
+                (cutoffAltitude - boomlessHardLimit) / (boomlessSoftLimit - boomlessHardLimit)
+            )
+            boomlessFraction = max(0.0, min(1.0, boomlessFraction))
+        else:
+            boomlessFraction = 1.0
 
         proposedArea = targetDeployment * self.wing.area()
         dynamicPressure = 0.5 * atmosphere.density() * totalVelocity**2
@@ -126,6 +148,12 @@ class flightSimulation:
                 currentAltitude=self.altitude,
                 targetAltitude=targetAltitude
             )
+
+        boomlessLimitedThrust = (
+            0.20 * self.maxThrust + boomlessFraction * (0.25 * self.maxThrust - 0.20 * self.maxThrust)
+        )
+
+        targetThrust = min(targetThrust, boomlessLimitedThrust)
             
         maxThrustRate = self.maxThrustRateFraction * self.maxThrust #N/s
         maxThrustChange = maxThrustRate * dt
