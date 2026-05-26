@@ -1,5 +1,26 @@
 #include <math.h>
 
+typedef struct {
+    double rho;
+    double velocity;
+    double wing_area;
+    double aspect_ratio;
+    double cl0;
+    double cd0;
+    double alpha_rad;
+    double oswald_efficiency;
+    double mach;
+} AeroInput;
+
+typedef struct {
+    double cl;
+    double cd;
+    double dynamic_pressure;
+    double lift;
+    double drag;
+} AeroOutput;
+
+/* Coefficients */
 double lift_coefficient(double cl0, double alpha_rad)
 {
     double lift_slope = 2.0 * M_PI;
@@ -29,6 +50,8 @@ double drag_coefficient(
     return cd;
 }
 
+
+/* Forces and pressures */
 double dynamic_pressure(double rho, double velocity)
 {
     return 0.5 * rho * velocity * velocity;
@@ -44,6 +67,29 @@ double drag_force(double dynamic_pressure_value, double wing_area, double cd)
     return dynamic_pressure_value * wing_area * cd;
 }
 
+double lift_to_drag_ratio(double lift, double drag)
+{
+    return lift / drag;
+}
+
+double net_force_x(double thrust, double drag)
+{
+    return thrust - drag;
+}
+
+double net_force_y(double lift, double weight)
+{
+    return lift - weight;
+}
+
+double weight_force(double mass)
+{
+    double gravity = 9.80665;
+    return mass * gravity;
+}
+
+
+/* Speed and accelerations */
 double speed_of_sound(double temperature)
 {
     double gamma = 1.4;
@@ -54,4 +100,57 @@ double speed_of_sound(double temperature)
 double mach_number(double speed_of_sound_value, double velocity)
 {
     return velocity / speed_of_sound_value;
+}
+
+double acceleration_x(double thrust, double drag, double mass)
+{
+    return net_force_x(thrust, drag) / mass;
+}
+
+double acceleration_y(double lift, double weight, double mass)
+{
+    return net_force_y(lift, weight) / mass;
+}
+
+
+void calculate_aero_state(AeroInput *inputs, AeroOutput *outputs)
+{ 
+    outputs->cl = lift_coefficient(
+        inputs->cl0,
+        inputs->alpha_rad
+    );
+
+    outputs->cd = drag_coefficient(
+        inputs->cd0,
+        outputs->cl,
+        inputs->aspect_ratio,
+        inputs->oswald_efficiency,
+        inputs->mach
+    );
+
+    outputs->dynamic_pressure = dynamic_pressure(
+        inputs->rho,
+        inputs->velocity
+    );
+
+    outputs->lift = lift_force(
+        outputs->dynamic_pressure,
+        inputs->wing_area,
+        outputs->cl
+    );
+
+    outputs->drag = drag_force(
+        outputs->dynamic_pressure,
+        inputs->wing_area,
+        outputs->cd
+    );
+}
+
+void calculate_aero_batch(AeroInput *inputs, AeroOutput *outputs, int count)
+{
+    int i;
+
+    for (i=0; i < count; i++) {
+        calculate_aero_state(&inputs[i], &outputs[i]);
+    }
 }
