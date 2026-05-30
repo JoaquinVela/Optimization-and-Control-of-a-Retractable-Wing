@@ -112,6 +112,15 @@ double acceleration_y(double lift, double weight, double mass)
     return net_force_y(lift, weight) / mass;
 }
 
+/* Atmosphere */
+double temperature_at_altitude(double altitude_meters)
+{
+    double sea_level_temp = 288.15;
+    double lapse_rate = 0.0065;
+
+    return sea_level_temp - lapse_rate * altitude_meters;
+}
+
 
 void calculate_aero_state(AeroInput *inputs, AeroOutput *outputs)
 { 
