@@ -20,6 +20,14 @@ typedef struct {
     double drag;
 } AeroOutput;
 
+
+/* Main pre-req functions */
+double dynamic_pressure(double rho, double velocity)
+{
+    return 0.5 * rho * velocity * velocity;
+}
+
+
 /* Coefficients */
 double lift_coefficient(double cl0, double alpha_rad)
 {
@@ -50,13 +58,45 @@ double drag_coefficient(
     return cd;
 }
 
-
-/* Forces and pressures */
-double dynamic_pressure(double rho, double velocity)
+double required_lift_coeff(double weight, double rho, double velocity, double wing_area)
 {
-    return 0.5 * rho * velocity * velocity;
+    double q = dynamic_pressure(rho, velocity);
+    return weight / (q * wing_area);
 }
 
+
+/* Geometry */
+double required_wing_area(double weight, double rho, double velocity, double cl)
+{
+    double q = dynamic_pressure(rho, velocity);
+    return weight / (q * cl);
+}
+
+double wing_area(double span, double chord)
+{
+    return span * chord;
+}
+
+double exposed_wing_area(double full_wing_area, double deployment)
+{
+    if (deployment < 0.3) {
+        deployment = 0.3;
+    }
+
+    if (deployment > 1.0) {
+        deployment = 1.0;
+    }
+
+    return full_wing_area * deployment;
+}
+
+double aspect_ratio(double span, double exposed_area)
+{
+    return (span * span) / exposed_area;
+}
+
+
+/* Forces */
 double lift_force(double dynamic_pressure_value, double wing_area, double cl)
 {
     return dynamic_pressure_value * wing_area * cl;
@@ -88,8 +128,36 @@ double weight_force(double mass)
     return mass * gravity;
 }
 
+double level_flight_drag(
+    double weight,
+    double rho,
+    double velocity, 
+    double wing_area,
+    double cd0,
+    double aspect_ratio,
+    double oswald_efficiency,
+    double mach
+)
+{
+    double cl = required_lift_coeff(weight, rho, velocity, wing_area);
+    double cd = drag_coefficient(cd0, cl, aspect_ratio, oswald_efficiency, mach);
+    double q = dynamic_pressure(rho, velocity);
 
-/* Speed and accelerations */
+    return q * wing_area * cd;
+}
+
+double power_required(double drag, double velocity)
+{
+    return drag * velocity;
+}
+
+double load_factor(double lift, double weight)
+{
+    return lift / weight;
+}
+
+
+/* Speed and accelerations and rates */
 double speed_of_sound(double temperature)
 {
     double gamma = 1.4;
@@ -112,6 +180,17 @@ double acceleration_y(double lift, double weight, double mass)
     return net_force_y(lift, weight) / mass;
 }
 
+double stall_speed(double weight, double rho, double wing_area, double cl_max)
+{
+    return sqrt((2.0*weight) / (rho * wing_area * cl_max));
+}
+
+double rate_of_climb(double thrust, double drag, double velocity, double weight)
+{
+    return ((thrust -  drag) * velocity) / weight;
+}
+
+
 /* Atmosphere */
 double temperature_at_altitude(double altitude_meters)
 {
@@ -121,7 +200,136 @@ double temperature_at_altitude(double altitude_meters)
     return sea_level_temp - lapse_rate * altitude_meters;
 }
 
+double air_density(double pressure, double temperature)
+{
+    double gas_constant = 287.05;
+    return pressure / (gas_constant * temperature);
+}
 
+double pressure_at_altitude(double altitude)
+{
+    double sea_level_pressure = 101325.0;
+    double sea_level_temp = 288.15;
+    double lapse_rate = 0.0065;
+    double gravity = 9.80665;
+    double gas_constant = 287.05;
+
+    double temperature = temperature_at_altitude(altitude);
+
+    return sea_level_pressure * pow(
+        temperature / sea_level_temp,
+        gravity / (gas_constant * lapse_rate));
+}
+
+double air_density_at_altitude(double altitude)
+{
+    double temperature = temperature_at_altitude(altitude);
+    double pressure = pressure_at_altitude(altitude);
+
+    return air_density(pressure, temperature);
+}
+
+/* Control functions */
+double dynamic_trim_alpha(
+    double weight,
+    double rho,
+    double velocity, 
+    double wing_area,
+    double cl0
+)
+{
+    double q = dynamic_pressure(rho, velocity);
+    double required_cl = weight / (q * wing_area);
+    double lift_slope = 2.0 * M_PI;
+
+    return (required_cl - cl0) / lift_slope;
+}
+
+double clamp(double value, double min, double max)
+{
+    if (value < min) {
+        return min;
+    }
+
+    if (value > max) {
+        return max;
+    }
+
+    return value;
+}
+
+double rate_limit(double current_value, double target_value, double max_change)
+{
+    double error = target_value - current_value;
+
+    if (error > max_change) {
+        return current_value + max_change;
+    }
+
+    if (error < -max_change) { 
+        return current_value - max_change;
+    }
+
+    return target_value;
+}
+
+/* Performance functions */
+int is_level_flight(double lift, double weight, double tolerance)
+{
+    double percent_diff = fabs(lift - weight) / weight;
+    return percent_diff <= tolerance;
+}
+
+int is_steady_speed(double thrust, double drag, double tolerance)
+{
+    double percent_diff = fabs(thrust - drag) / drag;
+    return percent_diff <= tolerance;
+}
+
+int is_trimmed(double lift, double weight, double thrust, double drag, double tolerance)
+{
+    return (
+        is_level_flight(lift, weight, tolerance)
+        && is_steady_speed(thrust, drag, tolerance));
+}
+
+
+/* Boomless functions */
+double cutoff_depth(double mach, double temp_gradient)
+{
+    double mach_excess;
+    double base_depth;
+    double gradient_factor;
+
+    mach_excess = mach - 1.0;
+    base_depth = 25000.0 * mach_excess;
+
+    if (temp_gradient < 0.0) {
+        gradient_factor = 1.0;
+    } else {
+        gradient_factor = 1.5;
+    }
+
+    return base_depth * gradient_factor;
+}
+
+double cutoff_altitude_agl(double altitude, double mach, double temp_gradient)
+{
+    if (mach <= 1.0) {
+        return 999999.0;
+    }
+
+    return altitude - cutoff_depth(mach, temp_gradient);
+}
+
+int is_boomless(double altitude, double mach, double temp_gradient, double min_cutoff_altitude_agl)
+{
+    double cutoff_altitude = cutoff_altitude_agl(altitude, mach, temp_gradient);
+    return cutoff_altitude >= min_cutoff_altitude_agl;
+}
+
+
+/* Main calculation functions */
 void calculate_aero_state(AeroInput *inputs, AeroOutput *outputs)
 { 
     outputs->cl = lift_coefficient(

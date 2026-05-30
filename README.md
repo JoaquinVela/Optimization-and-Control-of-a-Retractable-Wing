@@ -13,9 +13,11 @@ This project simulates and optimizes a retractable variable-geometry wing system
 
 ## Motivation
 Inspired by modern aerospace challenges including supersonic flight and adaptive aircraft geometry.
+Further inspired by Boom Supersonic's "boomless cruise" discovery and the Concorde's retractable nose cone. 
 
 ## Tech Stack
 - Python
+- C
 - NumPy / SciPy
 - Matplotlib
 - (Future) Machine Learning models
