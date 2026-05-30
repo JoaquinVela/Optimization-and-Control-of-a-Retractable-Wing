@@ -12,6 +12,7 @@ from src.models.performance import aerodynamicPerformance
 from src.models.atmosphere import cruiseAtmosphere
 from src.control.cruiseScheduler import cruiseSchedule
 from src.control.thrustController import thrustControl
+from src.models.aero_c import aero
 
 class flightSimulation:
     def __init__(self, aeroState, plane, controller, maxThrust, altitude, velocityY=0, maxThrustRateFraction=0.05, cruisePowerLimit=0.25):
@@ -171,24 +172,57 @@ class flightSimulation:
             self.thrust = targetThrust
 
         # 8 Recalculate forces
-        forces = aerodynamicsForce(
-            self.aeroState,
-            self.plane,
-            thrust = self.thrust
+        wingArea = self.wing.exposedWingArea()
+        aspectRatio = self.wing.aspectRatio()
+
+        dynamicPressure = aero.dynamic_pressure(
+            self.aeroState.rho,
+            self.aeroState.velocity
         )
 
-        performance = aerodynamicPerformance(forces)
+        cl = aero.lift_coefficient(
+            self.aeroState.cl0,
+            self.aeroState.alphaRad
+        )
+
+        cd = aero.drag_coefficient(
+            self.aeroState.cd0,
+            cl,
+            aspectRatio,
+            self.aeroState.oswaldEfficiency,
+            self.aeroState.mach
+        )
 
         # 9 Get Forces
-        lift = forces.lift()
-        drag = forces.drag()
-        weight = forces.weight()
-        netForceX = performance.netForceX()
-        netForceY = performance.netForceY()
+        lift = aero.lift_force(
+            dynamicPressure,
+            wingArea,
+            cl
+        )
+
+        drag = aero.drag_force(
+            dynamicPressure,
+            wingArea,
+            cd
+        )
+
+        weight = aero.weight_force(self.plane.mass)
+
+        netForceX = self.thrust - drag
+        netForceY = lift - weight
 
         # 10 Get accelerations
-        accY = performance.accY()
-        accX = performance.accX()
+        accX = aero.acceleration_x(
+            self.thrust,
+            drag,
+            self.plane.mass
+        )
+
+        accY = aero.acceleration_y(
+            lift,
+            weight,
+            self.plane.mass
+        )
 
         # 11 Update velocity and altitude
         self.velocity = self.velocity + accX * dt
@@ -223,7 +257,7 @@ class flightSimulation:
         self.velocityHistory.append(self.velocity)
         self.velocityYHistory.append(self.velocityY)
         self.alphaRadHistory.append(self.aeroState.alphaRad)
-        self.clHistory.append(self.aeroState.liftCoefficient())
+        self.clHistory.append(cl)
         self.liftHistory.append(lift)
         self.dragHistory.append(drag)
         self.weightHistory.append(weight)
