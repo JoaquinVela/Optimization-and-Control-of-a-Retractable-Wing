@@ -6,13 +6,12 @@ Basic flight simulator for a retractable wing optimization project.
 This file contains reusable functions for:
 - TBD
 """
-
+import ctypes
 from src.models.forces import aerodynamicsForce
 from src.models.performance import aerodynamicPerformance
-from src.models.atmosphere import cruiseAtmosphere
 from src.control.cruiseScheduler import cruiseSchedule
 from src.control.thrustController import thrustControl
-from src.models.aero_c import aero
+from src.models.aero_c import aero, AeroInput, AeroOutput
 
 class flightSimulation:
     def __init__(self, aeroState, plane, controller, maxThrust, altitude, velocityY=0, maxThrustRateFraction=0.05, cruisePowerLimit=0.25):
@@ -34,6 +33,8 @@ class flightSimulation:
 
         self.scheduler = cruiseSchedule(targetAltitude=controller.targetAltitude)
         self.wing = self.aeroState.wing
+        self.aeroInput = AeroInput()
+        self.aeroOutput = AeroOutput()
 
         self.timeHistory = []
         self.altitudeHistory = []
@@ -61,25 +62,24 @@ class flightSimulation:
 
     def step(self, time, dt):
         # 1 Build atmosphere
-        atmosphere = cruiseAtmosphere(self.altitude)
+        # TBD
 
         # 2 Update aerostate
         totalVelocity = self.totalVelocity()
-        self.aeroState.rho = atmosphere.density()
+        self.aeroState.rho = aero.air_density_at_altitude(self.altitude)
         self.aeroState.velocity = totalVelocity
 
         # 3 Ask scheduler for altitide and wing deployment targets
         targetAltitude, targetDeployment, mach = self.scheduler.chooseTarget(
             self.altitude,
             totalVelocity,
-            atmosphere,
             self.wing.deployment
         )
 
-        cutoffAltitude = self.scheduler.boomless.cutoffAltitudeAGL(
-            self.altitude, 
+        cutoffAltitude = aero.cutoff_altitude_agl(
+            self.altitude,
             mach,
-            atmosphere
+            -0.0065
         )
 
         boomlessHardLimit = (
@@ -94,16 +94,19 @@ class flightSimulation:
             boomlessFraction = (
                 (cutoffAltitude - boomlessHardLimit) / (boomlessSoftLimit - boomlessHardLimit)
             )
-            boomlessFraction = max(0.0, min(1.0, boomlessFraction))
+            boomlessFraction = aero.clamp(boomlessFraction, 0.0, 1.0)
         else:
             boomlessFraction = 1.0
 
         proposedArea = targetDeployment * self.wing.area()
-        dynamicPressure = 0.5 * atmosphere.density() * totalVelocity**2
-
-        requiredCL = self.plane.weight() / (dynamicPressure * proposedArea)
-        liftSlope = 2 * 3.141592653589793
-        requiredAlphaRad = (requiredCL - self.aeroState.cl0) / liftSlope
+        
+        requiredAlphaRad = aero.dynamic_trim_alpha(
+            self.plane.weight(),
+            self.aeroState.rho,
+            totalVelocity,
+            proposedArea,
+            self.aeroState.cl0
+        )
 
         alphaMargin = 0.02
         maxUsableAlphaRad = self.controller.maxAlphaRad - alphaMargin
@@ -128,12 +131,11 @@ class flightSimulation:
         maxAlphaRate = 0.01 # rad/s
         maxAlphaChange = maxAlphaRate * dt
 
-        alphaError = newAlphaRad - self.aeroState.alphaRad
-
-        if alphaError > maxAlphaChange:
-            newAlphaRad = self.aeroState.alphaRad + maxAlphaChange
-        elif alphaError < -maxAlphaChange:
-            newAlphaRad = self.aeroState.alphaRad - maxAlphaChange
+        newAlphaRad = aero.rate_limit(
+            self.aeroState.alphaRad,
+            newAlphaRad,
+            maxAlphaChange
+        )
 
         # 6 Update aerostate
         self.aeroState.alphaRad = newAlphaRad
@@ -162,49 +164,36 @@ class flightSimulation:
         maxThrustRate = self.maxThrustRateFraction * self.maxThrust #N/s
         maxThrustChange = maxThrustRate * dt
 
-        thrustError = targetThrust - self.thrust
+        self.thrust = aero.rate_limit(
+            self.thrust,
+            targetThrust,
+            maxThrustChange
+        )
 
-        if thrustError > maxThrustChange:
-            self.thrust = self.thrust + maxThrustChange
-        elif thrustError < -maxThrustChange:
-            self.thrust = self.thrust - maxThrustChange
-        else:
-            self.thrust = targetThrust
-
-        # 8 Recalculate forces
+        # 8 Recalculate aerodynamic state
         wingArea = self.wing.exposedWingArea()
         aspectRatio = self.wing.aspectRatio()
 
-        dynamicPressure = aero.dynamic_pressure(
-            self.aeroState.rho,
-            self.aeroState.velocity
+        self.aeroInput.rho = self.aeroState.rho
+        self.aeroInput.velocity = self.aeroState.velocity
+        self.aeroInput.wing_area = wingArea
+        self.aeroInput.aspect_ratio = aspectRatio
+        self.aeroInput.cl0 = self.aeroState.cl0
+        self.aeroInput.cd0 = self.aeroState.cd0
+        self.aeroInput.alpha_rad = self.aeroState.alphaRad
+        self.aeroInput.oswald_efficiency = self.aeroState.oswaldEfficiency
+        self.aeroInput.mach = self.aeroState.mach
+
+        aero.calculate_aero_state(
+            ctypes.byref(self.aeroInput),
+            ctypes.byref(self.aeroOutput)
         )
 
-        cl = aero.lift_coefficient(
-            self.aeroState.cl0,
-            self.aeroState.alphaRad
-        )
-
-        cd = aero.drag_coefficient(
-            self.aeroState.cd0,
-            cl,
-            aspectRatio,
-            self.aeroState.oswaldEfficiency,
-            self.aeroState.mach
-        )
-
-        # 9 Get Forces
-        lift = aero.lift_force(
-            dynamicPressure,
-            wingArea,
-            cl
-        )
-
-        drag = aero.drag_force(
-            dynamicPressure,
-            wingArea,
-            cd
-        )
+        dynamicPressure = self.aeroOutput.dynamic_pressure
+        cl = self.aeroOutput.cl 
+        cd = self.aeroOutput.cd
+        lift = self.aeroOutput.lift
+        drag = self.aeroOutput.drag
 
         weight = aero.weight_force(self.plane.mass)
 
@@ -239,14 +228,15 @@ class flightSimulation:
             self.altitude = 0
             self.velocityY = 0
         
-        loggedAtmosphere = cruiseAtmosphere(self.altitude)
         loggedTotalVelocity = self.totalVelocity()
-        loggedMach = loggedAtmosphere.machNumber(loggedTotalVelocity)
+        loggedTemperature = aero.temperature_at_altitude(self.altitude)
+        loggedSpeedOfSound = aero.speed_of_sound(loggedTemperature)
+        loggedMach = aero.mach_number(loggedSpeedOfSound, loggedTotalVelocity)
 
-        cutoffAltitude = self.scheduler.boomless.cutoffAltitudeAGL(
-            self.altitude,
+        cutoffAltitude = aero.cutoff_altitude_agl(
+            self.altitude, 
             loggedMach,
-            loggedAtmosphere
+            -0.0065
         )
 
         # 12 Save the data

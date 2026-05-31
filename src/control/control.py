@@ -7,7 +7,7 @@ This file contains reusable functions for:
 - TBD
 """
 
-import math
+from src.models.aero_c import aero
 
 class altitudeHoldController:
     def __init__(self, targetAltitude, trimAlphaRad, kp=0.00002, kd=0.002, minAlphaRad=-0.05, maxAlphaRad=0.15):
@@ -22,11 +22,13 @@ class altitudeHoldController:
         return self.targetAltitude - currentAltitude
     
     def dynamicTrimAlpha(self, aeroState, plane):
-        q = 0.5 * aeroState.rho * aeroState.velocity**2
-        s = aeroState.wing.exposedWingArea()
-        requiredCL = plane.weight() / (q * s)
-        liftSlope = 2 * math.pi
-        return (requiredCL - aeroState.cl0) / liftSlope
+        return aero.dynamic_trim_alpha(
+            plane.weight(),
+            aeroState.rho,
+            aeroState.velocity,
+            aeroState.wing.exposedWingArea(),
+            aeroState.cl0
+        )
     
     def command(self, currentAltitude, currentVelocityY, aeroState=None, plane=None):
         error = self.altitudeError(currentAltitude)

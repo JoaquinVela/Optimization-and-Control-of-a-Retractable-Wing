@@ -36,7 +36,7 @@ sim = flightSimulation(
 
 results = sim.run(
     totalTime=3000,
-    dt=0.1
+    dt=0.05
 )
 
 print("Final Altitude:", results["altitude"][-1])

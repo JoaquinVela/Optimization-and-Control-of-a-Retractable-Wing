@@ -8,7 +8,7 @@ This file contains reusable functions for:
 """
 
 from src.models.boomless import boomlessConstraint
-from src.models.atmosphere import cruiseAtmosphere
+from src.models.aero_c import aero
 
 class cruiseSchedule:
     def __init__(self, targetAltitude=None, maxAltitude=12496.8, minDeployment=0.3, maxDeployment=1.0, altitudeStep=100.0, deploymentStep=0.00025, minCutoffAltitudeAGL=30, boomlessSafetyMargin=100):
@@ -21,12 +21,22 @@ class cruiseSchedule:
         self.boomlessSafetyMargin = boomlessSafetyMargin
         self.boomless = boomlessConstraint(minCutoffAltitudeAGL)
 
-    def chooseTarget(self, altitude, velocity, atmosphere, deployment):
-        mach = atmosphere.machNumber(velocity)
+    def chooseTarget(self, altitude, velocity, deployment):
+        rho = aero.air_density_at_altitude(altitude)
+        temperature = aero.temperature_at_altitude(altitude)
+        speedOfSound = aero.speed_of_sound(temperature)
+        mach = aero.mach_number(speedOfSound, velocity)
+
         targetAltitude = min(self.targetAltitude, self.maxAltitude)
         targetDeployment = deployment
-        dynamicPressure = 0.5 * atmosphere.density() * velocity**2
-        cutoffAltitude = self.boomless.cutoffAltitudeAGL(altitude, mach, atmosphere)
+
+        dynamicPressure = aero.dynamic_pressure(rho, velocity)
+
+        cutoffAltitude = aero.cutoff_altitude_agl(
+            altitude, 
+            mach,
+            -0.0065
+        )
 
         nearBoomlessLimit = (
             cutoffAltitude < self.boomless.minCutoffAltitudeAGL + self.boomlessSafetyMargin
@@ -37,9 +47,10 @@ class cruiseSchedule:
         elif dynamicPressure > 12500:
             targetDeployment = deployment - self.deploymentStep
         
-        targetDeployment = max(
+        targetDeployment = aero.clamp(
+            targetDeployment,
             self.minDeployment,
-            min(self.maxDeployment, targetDeployment)
+            self.maxDeployment
         )
 
         return targetAltitude, targetDeployment, mach
