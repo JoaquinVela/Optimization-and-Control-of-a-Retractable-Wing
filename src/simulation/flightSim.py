@@ -61,15 +61,12 @@ class flightSimulation:
         return (self.velocity**2 + self.velocityY**2) ** 0.5
 
     def step(self, time, dt):
-        # 1 Build atmosphere
-        # TBD
-
-        # 2 Update aerostate
+        # 1 Update aerostate
         totalVelocity = self.totalVelocity()
         self.aeroState.rho = aero.air_density_at_altitude(self.altitude)
         self.aeroState.velocity = totalVelocity
 
-        # 3 Ask scheduler for altitide and wing deployment targets
+        # 2 Ask scheduler for altitide and wing deployment targets
         targetAltitude, targetDeployment, mach = self.scheduler.chooseTarget(
             self.altitude,
             totalVelocity,
@@ -117,10 +114,10 @@ class flightSimulation:
         self.aeroState.mach = mach
         self.controller.targetAltitude = targetAltitude
 
-        # 4 Apply wing geometry change
+        # 3 Apply wing geometry change
         self.wing.setDeployment(targetDeployment)
 
-        # 5 Controller decides new angle of attack
+        # 4 Controller decides new angle of attack
         newAlphaRad = self.controller.command(
             currentAltitude=self.altitude,
             currentVelocityY=self.velocityY,
@@ -137,10 +134,10 @@ class flightSimulation:
             maxAlphaChange
         )
 
-        # 6 Update aerostate
+        # 5 Update aerostate
         self.aeroState.alphaRad = newAlphaRad
 
-        # 7 Limit thrust based on current flight phase 
+        # 6 Limit thrust based on current flight phase 
         if time == 0.0: 
             targetThrust = self.thrustController.cruisePowerLimit * self.maxThrust
         else:
@@ -170,7 +167,7 @@ class flightSimulation:
             maxThrustChange
         )
 
-        # 8 Recalculate aerodynamic state
+        # 7 Recalculate aerodynamic state
         wingArea = self.wing.exposedWingArea()
         aspectRatio = self.wing.aspectRatio()
 
@@ -202,7 +199,7 @@ class flightSimulation:
         accX = self.aeroOutput.acc_x
         accY = self.aeroOutput.acc_y
 
-        # 9 Update velocity and altitude
+        # 8 Update velocity and altitude
         self.velocity = self.velocity + accX * dt
         self.velocityY = self.velocityY + accY * dt
         self.altitude = self.altitude + self.velocityY * dt
@@ -228,7 +225,7 @@ class flightSimulation:
             -0.0065
         )
 
-        # 10 Save the data
+        # 9 Save the data
         self.timeHistory.append(time)
         self.altitudeHistory.append(self.altitude)
         self.positionXHistory.append(self.positionX)
