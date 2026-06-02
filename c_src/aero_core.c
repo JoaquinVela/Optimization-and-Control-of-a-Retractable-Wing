@@ -10,6 +10,8 @@ typedef struct {
     double alpha_rad;
     double oswald_efficiency;
     double mach;
+    double mass;
+    double thrust;
 } AeroInput;
 
 typedef struct {
@@ -18,6 +20,11 @@ typedef struct {
     double dynamic_pressure;
     double lift;
     double drag;
+    double weight;
+    double net_force_x;
+    double net_force_y;
+    double acc_x;
+    double acc_y;
 } AeroOutput;
 
 
@@ -361,6 +368,22 @@ void calculate_aero_state(AeroInput *inputs, AeroOutput *outputs)
         inputs->wing_area,
         outputs->cd
     );
+
+    outputs->weight = weight_force(inputs->mass);
+
+    outputs->net_force_x = net_force_x(
+        inputs->thrust,
+        outputs->drag
+    );
+
+    outputs->net_force_y = net_force_y(
+        outputs->lift,
+        outputs->weight
+    );
+
+    outputs->acc_x = outputs->net_force_x / inputs->mass;
+
+    outputs->acc_y = outputs->net_force_y / inputs->mass;
 }
 
 void calculate_aero_batch(AeroInput *inputs, AeroOutput *outputs, int count)

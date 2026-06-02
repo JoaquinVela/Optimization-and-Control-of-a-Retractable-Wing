@@ -183,6 +183,8 @@ class flightSimulation:
         self.aeroInput.alpha_rad = self.aeroState.alphaRad
         self.aeroInput.oswald_efficiency = self.aeroState.oswaldEfficiency
         self.aeroInput.mach = self.aeroState.mach
+        self.aeroInput.mass = self.plane.mass
+        self.aeroInput.thrust = self.thrust
 
         aero.calculate_aero_state(
             ctypes.byref(self.aeroInput),
@@ -194,26 +196,13 @@ class flightSimulation:
         cd = self.aeroOutput.cd
         lift = self.aeroOutput.lift
         drag = self.aeroOutput.drag
+        weight = self.aeroOutput.weight
+        netForceX = self.aeroOutput.net_force_x
+        netForceY = self.aeroOutput.net_force_y
+        accX = self.aeroOutput.acc_x
+        accY = self.aeroOutput.acc_y
 
-        weight = aero.weight_force(self.plane.mass)
-
-        netForceX = self.thrust - drag
-        netForceY = lift - weight
-
-        # 10 Get accelerations
-        accX = aero.acceleration_x(
-            self.thrust,
-            drag,
-            self.plane.mass
-        )
-
-        accY = aero.acceleration_y(
-            lift,
-            weight,
-            self.plane.mass
-        )
-
-        # 11 Update velocity and altitude
+        # 9 Update velocity and altitude
         self.velocity = self.velocity + accX * dt
         self.velocityY = self.velocityY + accY * dt
         self.altitude = self.altitude + self.velocityY * dt
@@ -239,7 +228,7 @@ class flightSimulation:
             -0.0065
         )
 
-        # 12 Save the data
+        # 10 Save the data
         self.timeHistory.append(time)
         self.altitudeHistory.append(self.altitude)
         self.positionXHistory.append(self.positionX)

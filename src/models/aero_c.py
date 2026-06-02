@@ -20,7 +20,9 @@ class AeroInput(ctypes.Structure):
         ("cd0", ctypes.c_double),
         ("alpha_rad", ctypes.c_double),
         ("oswald_efficiency", ctypes.c_double),
-        ("mach", ctypes.c_double)
+        ("mach", ctypes.c_double),
+        ("mass", ctypes.c_double),
+        ("thrust", ctypes.c_double),
     ]
 
 class AeroOutput(ctypes.Structure):
@@ -30,6 +32,11 @@ class AeroOutput(ctypes.Structure):
         ("dynamic_pressure", ctypes.c_double),
         ("lift", ctypes.c_double),
         ("drag", ctypes.c_double),
+        ("weight", ctypes.c_double),
+        ("net_force_x", ctypes.c_double),
+        ("net_force_y", ctypes.c_double),
+        ("acc_x", ctypes.c_double),
+        ("acc_y", ctypes.c_double),
     ]
 
 aero.calculate_aero_state.argtypes = [
