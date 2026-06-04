@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdlib.h>
 
 typedef struct {
     double rho;
@@ -27,6 +28,87 @@ typedef struct {
     double acc_y;
 } AeroOutput;
 
+AeroInput *create_aero_input(void)
+{
+    AeroInput *input = malloc(sizeof(AeroInput));
+
+    if (input == NULL) {
+        return NULL;
+    }
+
+    return input;
+}
+
+AeroOutput *create_aero_output(void)
+{
+    AeroOutput *output = malloc(sizeof(AeroOutput));
+    
+    if (output == NULL) {
+        return NULL;
+    }
+
+    return output;
+}
+
+void initialize_aero_input(
+    AeroInput *input,
+    double rho,
+    double velocity,
+    double wing_area,
+    double aspect_ratio,
+    double cl0,
+    double cd0,
+    double alpha_rad,
+    double oswald_efficiency,
+    double mach,
+    double mass,
+    double thrust
+)
+{
+    if (input == NULL) {
+        return;
+    }
+
+    input->rho = rho;
+    input->velocity = velocity;
+    input->wing_area = wing_area;
+    input->aspect_ratio = aspect_ratio;
+    input->cl0 = cl0;
+    input->cd0 = cd0;
+    input->alpha_rad = alpha_rad;
+    input->oswald_efficiency = oswald_efficiency;
+    input->mach = mach;
+    input->mass = mass;
+    input->thrust = thrust;
+}
+
+void initialize_aero_output(AeroOutput *output)
+{
+    if (output == NULL) {
+        return;
+    }
+
+    output->cl = 0.0;
+    output->cd = 0.0;
+    output->dynamic_pressure = 0.0;
+    output->lift = 0.0;
+    output->drag = 0.0;
+    output->weight = 0.0;
+    output->net_force_x = 0.0;
+    output->net_force_y = 0.0;
+    output->acc_x = 0.0;
+    output->acc_y = 0.0;
+}
+
+void destroy_aero_input(AeroInput *input)
+{
+    free(input);
+}
+
+void destroy_aero_output(AeroOutput *output)
+{
+    free(output);
+}
 
 /* Main pre-req functions */
 double dynamic_pressure(double rho, double velocity)
