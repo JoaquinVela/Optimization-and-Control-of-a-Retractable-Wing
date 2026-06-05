@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdlib.h>
 
+/* Memory management and data structures */
 typedef struct {
     double rho;
     double velocity;
@@ -39,6 +40,23 @@ AeroInput *create_aero_input(void)
     return input;
 }
 
+AeroInput *create_aero_input_array(int count)
+{
+    AeroInput *inputs;
+
+    if (count <= 0) {
+        return NULL;
+    }
+
+    inputs = malloc(count * sizeof(AeroInput));
+
+    if (inputs == NULL) {
+        return NULL;
+    }
+
+    return inputs;
+}
+
 AeroOutput *create_aero_output(void)
 {
     AeroOutput *output = malloc(sizeof(AeroOutput));
@@ -48,6 +66,23 @@ AeroOutput *create_aero_output(void)
     }
 
     return output;
+}
+
+AeroOutput *create_aero_output_array(int count)
+{
+    AeroOutput *outputs;
+
+    if (count <= 0) {
+        return NULL;
+    }
+
+    outputs = malloc(count * sizeof(AeroOutput));
+
+    if (outputs == NULL) {
+        return NULL;
+    }
+
+    return outputs;
 }
 
 void initialize_aero_input(
@@ -103,6 +138,16 @@ void initialize_aero_output(AeroOutput *output)
 void destroy_aero_input(AeroInput *input)
 {
     free(input);
+}
+
+void destroy_aero_input_array(AeroInput *inputs)
+{
+    free(inputs);
+}
+
+void destroy_aero_output_array(AeroOutput *outputs)
+{
+    free(outputs);
 }
 
 void destroy_aero_output(AeroOutput *output)
@@ -421,6 +466,10 @@ int is_boomless(double altitude, double mach, double temp_gradient, double min_c
 /* Main calculation functions */
 void calculate_aero_state(AeroInput *inputs, AeroOutput *outputs)
 { 
+    if (inputs == NULL || outputs == NULL) {
+        return;
+    }
+
     outputs->cl = lift_coefficient(
         inputs->cl0,
         inputs->alpha_rad
@@ -471,6 +520,10 @@ void calculate_aero_state(AeroInput *inputs, AeroOutput *outputs)
 void calculate_aero_batch(AeroInput *inputs, AeroOutput *outputs, int count)
 {
     int i;
+
+    if (inputs == NULL || outputs == NULL || count <= 0) {
+        return;
+    }
 
     for (i=0; i < count; i++) {
         calculate_aero_state(&inputs[i], &outputs[i]);
