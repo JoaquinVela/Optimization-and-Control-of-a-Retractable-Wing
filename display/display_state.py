@@ -30,14 +30,14 @@ def wing_retraction_percent_from_deployment(deployment):
     return (1.0 - deployment) / (1.0 - 0.3) * 100.0
 
 def create_demo_state(t):
-    airspeed_kt = 470.0 + 45.0 * math.sin(t * 0.35)
+    airspeed_kt = 800.0 + 45.0 * math.sin(t * 0.35)
     altitude_ft = 39000.0 + 900.0 * math.sin(t * 0.18)
     target_altitude_ft = 40000.0
-    mach = airspeed_kt / 573.0
+    mach = airspeed_kt / 666.7
 
     pitch_deg = 3.0 * math.sin(t * 0.7)
     roll_deg = 0.0
-    heading_deg = (45.0 + t * 8.0) % 360.0
+    heading_deg = 0.0
     vertical_speed_fpm = 600.0 * math.sin(t * 0.18)
 
     deployment = 0.65 + 0.25 * math.sin(t * 0.25)
@@ -69,12 +69,12 @@ def create_demo_state(t):
         wing_retraction_percent=wing_retraction_percent,
         boom_margin_m=boom_margin_m,
         cutoff_altitude_agl_m=cutoff_altitude_agl_m,
-        green_speed_min_kt=430.0,
-        green_speed_max_kt=505.0,
-        yellow_speed_min_kt=505.0,
-        yellow_speed_max_kt=535.0,
-        red_speed_min_kt=535.0,
-        red_speed_max_kt=590.0,
+        green_speed_min_kt=667.0,
+        green_speed_max_kt=800.0,
+        yellow_speed_min_kt=800.0,
+        yellow_speed_max_kt=866.0,
+        red_speed_min_kt=866.0,
+        red_speed_max_kt=900.0,
         optimal_boomless_speed_kt=485.0,
         status=status
     )

@@ -3,6 +3,9 @@ import pygame
 
 from display.display_state import create_demo_state
 from display.artificial_horizon import draw_artificial_horizon
+from display.speed_tape import draw_speed_tape
+from display.altitude_tape import draw_altitude_tape
+from display.heading_tape import draw_heading_tape
 from display.colors import BLACK
 
 def main():
@@ -31,6 +34,15 @@ def main():
 
         horizon_rect = pygame.Rect(320, 80, 640, 460)
         draw_artificial_horizon(screen, state, horizon_rect)
+
+        speed_rect = pygame.Rect(80, 80, 180, 460)
+        draw_speed_tape(screen, state, speed_rect)
+
+        altitude_rect = pygame.Rect(1020, 80, 180, 460)
+        draw_altitude_tape(screen, state, altitude_rect)
+
+        heading_rect = pygame.Rect(320, 610, 640, 90)
+        draw_heading_tape(screen, state, heading_rect)
 
         pygame.display.flip()
         clock.tick(60)
