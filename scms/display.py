@@ -7,6 +7,7 @@ from scms.widgets.future_prediction import draw_future_prediction
 from scms.widgets.optimization_advisor import draw_optimization_advisor
 from scms.widgets.top_bar import draw_top_bar_values
 from scms.widgets.wing_indicator import draw_wing_configuration
+from scms.widgets.auto_optimization import draw_auto_optimization
 
 
 class SCMSDisplay:
@@ -31,7 +32,8 @@ class SCMSDisplay:
         wing_rect = pygame.Rect(1030, 76, 230, 270)
         advisor_rect = pygame.Rect(20, 476, 745, 130)
         constraint_rect = pygame.Rect(20, 626, 745, 154)
-        future_rect = pygame.Rect(785, 366, 475, 414)
+        future_rect = pygame.Rect(785, 366, 475, 240)
+        auto_pilot = pygame.Rect(785, 626, 475, 154)
 
         self.draw_panel(top_bar_rect, "SCMS")
         self.draw_panel(envelope_rect, "SUPERSONIC ENVELOPE")
@@ -40,6 +42,7 @@ class SCMSDisplay:
         self.draw_panel(advisor_rect, "SPEED OPTIMIZATION ADVISOR")
         self.draw_panel(constraint_rect, "CONSTRAINT HEALTH")
         self.draw_panel(future_rect, "PREDICTED STATE")
+        self.draw_panel(auto_pilot, "AUTO OPTIMIZATION")
 
         draw_top_bar_values(self.screen, top_bar_rect, state, self.font_medium)
         draw_boom_panel(self.screen, boom_rect, state, self.font_small)
@@ -54,6 +57,13 @@ class SCMSDisplay:
         )
         draw_wing_configuration(self.screen, wing_rect, state, self.font_small)
         draw_envelope_plot(self.screen, envelope_rect, state, self.font_small)
+        draw_auto_optimization(
+            self.screen,
+            auto_pilot,
+            state,
+            self.font_medium,
+            self.font_small,
+        )
 
     def draw_panel(self, rect, title):
         pygame.draw.rect(self.screen, (14, 18, 24), rect)
@@ -61,3 +71,8 @@ class SCMSDisplay:
 
         title_surface = self.font_small.render(title, True, (0, 220, 255))
         self.screen.blit(title_surface, (rect.x + 12, rect.y + 10))
+
+    def get_auto_optimization_rect(self):
+        return pygame.Rect(785, 626, 475, 154)
+
+    

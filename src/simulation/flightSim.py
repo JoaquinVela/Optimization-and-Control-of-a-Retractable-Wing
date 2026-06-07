@@ -60,7 +60,7 @@ class flightSimulation:
     def totalVelocity(self):
         return (self.velocity**2 + self.velocityY**2) ** 0.5
 
-    def step(self, time, dt):
+    def step(self, time, dt, autoOptimization=True, manualTargetAltitude=None, manualDeployment=None, manualThrustFraction=None):
         # 1 Update aerostate
         totalVelocity = self.totalVelocity()
         self.aeroState.rho = aero.air_density_at_altitude(self.altitude)
@@ -72,6 +72,13 @@ class flightSimulation:
             totalVelocity,
             self.wing.deployment
         )
+
+        if not autoOptimization:
+            if manualTargetAltitude is not None:
+                targetAltitude = manualTargetAltitude
+
+            if manualDeployment is not None:
+                targetDeployment = manualDeployment
 
         cutoffAltitude = aero.cutoff_altitude_agl(
             self.altitude,
@@ -138,25 +145,33 @@ class flightSimulation:
         self.aeroState.alphaRad = newAlphaRad
 
         # 6 Limit thrust based on current flight phase 
-        if time == 0.0: 
-            targetThrust = self.thrustController.cruisePowerLimit * self.maxThrust
+        if autoOptimization:
+            if time == 0.0:
+                targetThrust = self.thrustController.cruisePowerLimit * self.maxThrust
+            else:
+                requestedThrust = self.thrustController.requestedThrustForAltitude(
+                    currentAltitude=self.altitude,
+                    targetAltitude=targetAltitude
+                )
+
+                targetThrust = self.thrustController.command(
+                    requestedThrust=requestedThrust,
+                    currentAltitude=self.altitude,
+                    targetAltitude=targetAltitude
+                )
+
+            boomlessLimitedThrust = (
+                0.20 * self.maxThrust
+                + boomlessFraction * (0.25 * self.maxThrust - 0.20 * self.maxThrust)
+                )
+
+            targetThrust = min(targetThrust, boomlessLimitedThrust)
         else:
-            requestedThrust = self.thrustController.requestedThrustForAltitude(
-                currentAltitude=self.altitude,
-                targetAltitude=targetAltitude
+            manualThrustFraction = (
+                0.25 if manualThrustFraction is None else manualThrustFraction
             )
-
-            targetThrust = self.thrustController.command(
-                requestedThrust=requestedThrust,
-                currentAltitude=self.altitude,
-                targetAltitude=targetAltitude
-            )
-
-        boomlessLimitedThrust = (
-            0.20 * self.maxThrust + boomlessFraction * (0.25 * self.maxThrust - 0.20 * self.maxThrust)
-        )
-
-        targetThrust = min(targetThrust, boomlessLimitedThrust)
+            manualThrustFraction = aero.clamp(manualThrustFraction, 0.0, 1.0)
+            targetThrust = manualThrustFraction * self.maxThrust
             
         maxThrustRate = self.maxThrustRateFraction * self.maxThrust #N/s
         maxThrustChange = maxThrustRate * dt

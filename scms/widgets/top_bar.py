@@ -4,7 +4,7 @@ def draw_top_bar_values(screen, rect, state, font_medium):
     text = (
         f"MACH {state['mach']:.2f}      "
         f"ALT {state['altitude_ft']:,.0f} ft        "
-        f"SPD {state['velocity_mps']:.0f} m/s       "
+        f"SPD {state['velocity_mps'] * 1.94384:.0f} knots       "
         f"STATUS:"
     )
 
@@ -26,7 +26,7 @@ def get_status(state):
     ]
 
     if any(margin < 0 for margin in margins):
-        return "VIOLATION", (230, 55, 50)
+        return "    VIOLATION", (230, 55, 50)
     if any(margin < 15 for margin in margins):
-        return "CAUTION", (240, 205, 40)
-    return "SAFE", (0, 210, 90)
+        return "  CAUTION", (240, 205, 40)
+    return " SAFE", (0, 210, 90)

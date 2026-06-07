@@ -30,4 +30,9 @@ def create_initial_state():
         "mach_rate_per_sec": 0.001,
         "climb_rate_fps": 10,
         "boom_margin_rate_mps": 0.55,
+
+        "auto_optimization_enabled": True,
+        "manual_target_altitude_ft": 40000,
+        "manual_deployment": 1.0,
+        "manual_thrust_percent": 25,
     }

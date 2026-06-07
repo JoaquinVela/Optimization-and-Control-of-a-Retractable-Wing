@@ -9,24 +9,14 @@ def draw_envelope_plot(screen, rect, state, font_small):
         rect.height - 122,
     )
 
-    mach_min = 0.8
-    mach_max = 2.0
-    altitude_min_ft = 30000
-    altitude_max_ft = 65000
+    mach_min = 0.9
+    mach_max = 1.9
+    altitude_min_ft = 25000
+    altitude_max_ft = 50000
 
-    safe_envelope = [
-        (0.95, 33000),
-        (1.15, 42000),
-        (1.45, 50000),
-        (1.70, 56000),
-        (1.85, 60000),
-        (1.70, 63000),
-        (1.25, 62000),
-        (1.00, 52000),
-    ]
+    safe_envelope = state.get("supersonic_envelope", [])
 
     pygame.draw.rect(screen, (8, 12, 18), plot_rect)
-    pygame.draw.rect(screen, (90, 96, 105), plot_rect, 1)
 
     draw_plot_grid(screen, plot_rect)
 
@@ -42,9 +32,6 @@ def draw_envelope_plot(screen, rect, state, font_small):
         )
         for mach, altitude in safe_envelope
     ]
-
-    pygame.draw.polygon(screen, (20, 80, 70), envelope_points)
-    pygame.draw.polygon(screen, (0, 210, 90), envelope_points, 2)
 
     current_point = map_envelope_point(
         state["mach"],
@@ -69,6 +56,13 @@ def draw_envelope_plot(screen, rect, state, font_small):
         altitude_max_ft,
     )
 
+    previous_clip = screen.get_clip()
+    screen.set_clip(plot_rect)
+
+    if len(envelope_points) >= 3:
+        pygame.draw.polygon(screen, (20, 80, 70), envelope_points)
+        pygame.draw.polygon(screen, (0, 210, 90), envelope_points, 2)
+
     pygame.draw.line(screen, (0, 220, 255), current_point, future_point, 2)
     pygame.draw.circle(screen, (0, 220, 255), current_point, 7)
     pygame.draw.circle(screen, (245, 245, 245), current_point, 11, 2)
@@ -79,6 +73,10 @@ def draw_envelope_plot(screen, rect, state, font_small):
 
     future_surface = font_small.render("+60s", True, (240, 205, 40))
     screen.blit(future_surface, (future_point[0] + 10, future_point[1] - 10))
+
+    screen.set_clip(previous_clip)
+
+    pygame.draw.rect(screen, (90, 96, 105), plot_rect, 1)
 
     mach_label = font_small.render("MACH", True, (245, 245, 245))
     screen.blit(
@@ -98,7 +96,6 @@ def draw_envelope_plot(screen, rect, state, font_small):
         altitude_max_ft,
         font_small,
     )
-
 
 def map_envelope_point(
     mach,
@@ -153,7 +150,7 @@ def draw_axis_labels(
     altitude_max_ft,
     font_small,
 ):
-    for mach in [0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0]:
+    for mach in [0.9, 1.1, 1.3, 1.5, 1.7, 1.9]:
         x = plot_rect.x + int((mach - mach_min) / (mach_max - mach_min) * plot_rect.width)
         pygame.draw.line(
             screen,
@@ -165,7 +162,7 @@ def draw_axis_labels(
         label = font_small.render(f"{mach:.1f}", True, (170, 178, 190))
         screen.blit(label, (x - label.get_width() // 2, plot_rect.bottom + 8))
 
-    for altitude in [30000, 40000, 50000, 60000]:
+    for altitude in [25000, 30000, 35000, 40000, 45000, 50000]:
         y = plot_rect.bottom - int(
             (altitude - altitude_min_ft)
             / (altitude_max_ft - altitude_min_ft)
