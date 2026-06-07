@@ -6,6 +6,7 @@ from display.artificial_horizon import draw_artificial_horizon
 from display.speed_tape import draw_speed_tape
 from display.altitude_tape import draw_altitude_tape
 from display.heading_tape import draw_heading_tape
+from display.wing_retraction_wheel import draw_wing_retraction_wheel
 from display.colors import BLACK
 
 def main():
@@ -43,6 +44,9 @@ def main():
 
         heading_rect = pygame.Rect(320, 610, 640, 90)
         draw_heading_tape(screen, state, heading_rect)
+
+        wing_rect = pygame.Rect(1000, 580, 220, 180)
+        draw_wing_retraction_wheel(screen, state, wing_rect)
 
         pygame.display.flip()
         clock.tick(60)
