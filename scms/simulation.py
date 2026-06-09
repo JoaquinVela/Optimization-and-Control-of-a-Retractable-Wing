@@ -8,7 +8,7 @@ from src.models.aero_c import aero
 from src.simulation.flightSim import flightSimulation
 
 FT_PER_METER = 3.28084
-Q_SCHEDULING_LIMIT_PA = 12500
+Q_SCHEDULING_LIMIT_PA = 20000
 Q_STRUCTURAL_LIMIT_PA = 25000
 ENVELOPE_DYNAMIC_PRESSURE_PA = 50000
 MAX_STAGNATION_TEMPERATURE_K = 390
@@ -16,11 +16,11 @@ TEMP_GRADIENT_K_PER_M = -0.0065
 
 class Simulation:
     def __init__(self):
-        wing = wingGeometry(span=64.8, chord=6.98)
+        wing = wingGeometry(span=64.8, chord=6.98, deployment = 0.50)
 
         aero_state = aerodynamicState(
             rho=0.380,
-            velocity=248,
+            velocity=289,
             wing=wing,
             cl0=0.2,
             cd0=0.02,
@@ -33,7 +33,7 @@ class Simulation:
 
         controller = altitudeHoldController(
             trimAlphaRad=aero_state.alphaRad,
-            targetAltitude=12481,
+            targetAltitude=12496.8,
         )
 
         self.sim = flightSimulation(
@@ -41,7 +41,7 @@ class Simulation:
             plane=plane,
             controller=controller,
             maxThrust=max_thrust,
-            altitude=12000,
+            altitude=12496.8,
             velocityY=0,
         )
 
@@ -130,6 +130,15 @@ class Simulation:
             100 * (target_thrust - thrust) / self.max_thrust
         )
 
+        optimizer_target = getattr(self.sim, "optimizerTarget", None)
+
+        if optimizer_target is not None:
+            optimizer_reason = optimizer_target.reason
+            optimizer_predicted_mach = optimizer_target.predictedMach
+        else:
+            optimizer_reason = "NO OPTIMIZER TARGET"
+            optimizer_predicted_mach = potential_mach
+
         return {
             "mach": mach,
             "altitude_ft": altitude_ft,
@@ -156,6 +165,8 @@ class Simulation:
             "manual_target_altitude_ft": self.manual_target_altitude_m * FT_PER_METER,
             "manual_deployment": self.manual_deployment,
             "manual_thrust_percent": self.manual_thrust_fraction * 100,
+            "optimizer_reason": optimizer_reason,
+            "optimizer_predicted_mach": optimizer_predicted_mach,
         }
     
     def _create_supersonic_envelope(self):

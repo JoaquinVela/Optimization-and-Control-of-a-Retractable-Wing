@@ -12,6 +12,7 @@ from src.models.performance import aerodynamicPerformance
 from src.control.cruiseScheduler import cruiseSchedule
 from src.control.thrustController import thrustControl
 from src.models.aero_c import aero, AeroInput, AeroOutput
+from src.control.speedOptimizer import speedOptimizer
 
 class flightSimulation:
     def __init__(self, aeroState, plane, controller, maxThrust, altitude, velocityY=0, maxThrustRateFraction=0.05, cruisePowerLimit=0.25):
@@ -25,6 +26,8 @@ class flightSimulation:
             self.maxThrust,
             cruisePowerLimit=cruisePowerLimit
         )
+        self.speedOptimizer = speedOptimizer(maxThrustFraction=cruisePowerLimit, qLimitPa=20000)
+        self.optimizerTarget = None
         self.altitude = altitude
         self.velocity = aeroState.velocity
         self.velocityY = velocityY
@@ -72,6 +75,25 @@ class flightSimulation:
             totalVelocity,
             self.wing.deployment
         )
+
+        targetThrustFraction = self.thrustController.cruisePowerLimit
+
+        if autoOptimization:
+            self.optimizerTarget = self.speedOptimizer.chooseTarget(
+                altitude=self.altitude,
+                velocity=totalVelocity,
+                deployment=self.wing.deployment,
+                aeroState=self.aeroState,
+                plane=self.plane,
+                controller=self.controller,
+                wing=self.wing,
+                maxAltitude=self.scheduler.maxAltitude,
+                maxThrust=self.maxThrust,
+            )
+
+            targetAltitude = self.optimizerTarget.targetAltitude
+            targetDeployment = self.optimizerTarget.targetDeployment
+            targetThrustFraction = self.optimizerTarget.targetThrustFraction
 
         if not autoOptimization:
             if manualTargetAltitude is not None:
@@ -146,19 +168,7 @@ class flightSimulation:
 
         # 6 Limit thrust based on current flight phase 
         if autoOptimization:
-            if time == 0.0:
-                targetThrust = self.thrustController.cruisePowerLimit * self.maxThrust
-            else:
-                requestedThrust = self.thrustController.requestedThrustForAltitude(
-                    currentAltitude=self.altitude,
-                    targetAltitude=targetAltitude
-                )
-
-                targetThrust = self.thrustController.command(
-                    requestedThrust=requestedThrust,
-                    currentAltitude=self.altitude,
-                    targetAltitude=targetAltitude
-                )
+            targetThrust = targetThrustFraction * self.maxThrust
 
             boomlessLimitedThrust = (
                 0.20 * self.maxThrust
