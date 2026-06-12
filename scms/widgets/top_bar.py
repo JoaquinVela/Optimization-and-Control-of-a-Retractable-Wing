@@ -27,6 +27,6 @@ def get_status(state):
 
     if any(margin < 0 for margin in margins):
         return "    VIOLATION", (230, 55, 50)
-    if any(margin < 15 for margin in margins):
+    if any(margin < 10 for margin in margins):
         return "  CAUTION", (240, 205, 40)
     return " SAFE", (0, 210, 90)

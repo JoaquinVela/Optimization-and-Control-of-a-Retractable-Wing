@@ -30,7 +30,7 @@ def draw_constraint_health(screen, rect, state, font_small):
             color = (230, 55, 50)
         elif usage >= 90:
             color = (255, 165, 40)
-        elif usage >= 70:
+        elif usage >= 80:
             color = (240, 205, 40)
         else:
             color = (0, 210, 90)
