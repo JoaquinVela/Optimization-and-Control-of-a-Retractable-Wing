@@ -7,7 +7,7 @@ from scms.widgets.manual_controls import ManualControlsWindow
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((1280, 800))
+    screen = pygame.display.set_mode((1280, 800), pygame.SCALED | pygame.DOUBLEBUF,)
     pygame.display.set_caption("SCMS")
 
     clock = pygame.time.Clock()

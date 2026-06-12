@@ -27,14 +27,14 @@ def draw_optimization_advisor(screen, rect, state, font_small):
         True,
         (170, 178, 190)
     )
-    screen.blit(rec_title, (right_x + 10, rect.y + 42))
+    screen.blit(rec_title, (right_x + 10, rect.y + 38))
 
     rec_surface = font_small.render(
         recommendation,
         True,
         (245, 245, 245),
     )
-    screen.blit(rec_surface, (right_x + 10, rect.y + 68))
+    screen.blit(rec_surface, (right_x + 10, rect.y + 64))
 
     status_label = font_small.render(
         "ACTION STATUS:",
@@ -47,8 +47,8 @@ def draw_optimization_advisor(screen, rect, state, font_small):
         action_color,
     )
 
-    screen.blit(status_label, (right_x + 10, rect.y + 96))
-    screen.blit(status_surface, (right_x + 160, rect.y + 96))
+    screen.blit(status_label, (right_x + 10, rect.y + 92))
+    screen.blit(status_surface, (right_x + 160, rect.y + 92))
 
 
 def get_recommendation(state):

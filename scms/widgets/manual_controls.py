@@ -1,5 +1,6 @@
 import pygame
 from pygame._sdl2.video import Renderer, Texture, Window
+from scms.fonts import load_font
 
 class ManualControlsWindow:
     def __init__(self):
@@ -20,9 +21,9 @@ class ManualControlsWindow:
         )
         self.renderer = Renderer(self.window)
 
-        self.font_large = pygame.font.SysFont("Arial", 30, bold=True)
-        self.font_medium = pygame.font.SysFont("Arial", 22, bold=True)
-        self.font_small = pygame.font.SysFont("Arial", 18, bold=True)
+        self.font_large = load_font(30, bold=True)
+        self.font_medium = load_font(22, bold=True)
+        self.font_small = load_font(18, bold=True)
 
     def hide(self):
         if self.window is None:

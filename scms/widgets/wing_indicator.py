@@ -1,4 +1,5 @@
 import pygame
+from scms.drawing import aa_filled_polygon, aa_line, aa_polygon_outline
 
 
 def draw_wing_configuration(screen, rect, state, font_small):
@@ -23,7 +24,7 @@ def draw_wing_configuration(screen, rect, state, font_small):
     body_length = 86
     body_width = 14
 
-    pygame.draw.line(
+    aa_line(
         screen,
         (245, 245, 245),
         (center_x, center_y - body_length // 2),
@@ -31,7 +32,7 @@ def draw_wing_configuration(screen, rect, state, font_small):
         body_width,
     )
 
-    pygame.draw.polygon(
+    aa_filled_polygon(
         screen,
         (245, 245, 245),
         [
@@ -63,16 +64,16 @@ def draw_wing_configuration(screen, rect, state, font_small):
         (center_x + 6, center_y + 12),
     ]
 
-    pygame.draw.polygon(screen, wing_color, left_wing)
-    pygame.draw.polygon(screen, wing_color, right_wing)
+    aa_filled_polygon(screen, wing_color, left_wing)
+    aa_filled_polygon(screen, wing_color, right_wing)
 
-    pygame.draw.polygon(screen, (245, 245, 245), left_wing, 2)
-    pygame.draw.polygon(screen, (245, 245, 245), right_wing, 2)
+    aa_polygon_outline(screen, (245, 245, 245), left_wing, 2)
+    aa_polygon_outline(screen, (245, 245, 245), right_wing, 2)
 
     tail_span = 36
     tail_y = center_y + body_length // 2 - 16
 
-    pygame.draw.line(
+    aa_line(
         screen,
         (245, 245, 245),
         (center_x - tail_span, tail_y),

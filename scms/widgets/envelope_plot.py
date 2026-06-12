@@ -1,4 +1,11 @@
 import pygame
+from scms.drawing import (
+    aa_circle_outline,
+    aa_filled_circle,
+    aa_filled_polygon,
+    aa_line,
+    aa_polygon_outline,
+)
 
 
 def draw_envelope_plot(screen, rect, state, font_small):
@@ -60,13 +67,13 @@ def draw_envelope_plot(screen, rect, state, font_small):
     screen.set_clip(plot_rect)
 
     if len(envelope_points) >= 3:
-        pygame.draw.polygon(screen, (20, 80, 70), envelope_points)
-        pygame.draw.polygon(screen, (0, 210, 90), envelope_points, 2)
+        aa_filled_polygon(screen, (20, 80, 70), envelope_points)
+        aa_polygon_outline(screen, (0, 210, 90), envelope_points, 2)
 
-    pygame.draw.line(screen, (0, 220, 255), current_point, future_point, 2)
-    pygame.draw.circle(screen, (0, 220, 255), current_point, 7)
-    pygame.draw.circle(screen, (245, 245, 245), current_point, 11, 2)
-    pygame.draw.circle(screen, (240, 205, 40), future_point, 5)
+    aa_line(screen, (0, 220, 255), current_point, future_point, 2)
+    aa_filled_circle(screen, (0, 220, 255), current_point, 7)
+    aa_circle_outline(screen, (245, 245, 245), current_point, 11, 2)
+    aa_filled_circle(screen, (240, 205, 40), future_point, 5)
 
     future_surface = font_small.render("+60s", True, (240, 205, 40))
     screen.blit(future_surface, (future_point[0] + 10, future_point[1] - 10))

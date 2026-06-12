@@ -8,6 +8,7 @@ from scms.widgets.optimization_advisor import draw_optimization_advisor
 from scms.widgets.top_bar import draw_top_bar_values
 from scms.widgets.wing_indicator import draw_wing_configuration
 from scms.widgets.auto_optimization import draw_auto_optimization
+from scms.fonts import load_font
 
 
 class SCMSDisplay:
@@ -15,9 +16,9 @@ class SCMSDisplay:
         self.screen = screen
         self.width, self.height = screen.get_size()
 
-        self.font_large = pygame.font.SysFont("Arial", 32, bold=True)
-        self.font_medium = pygame.font.SysFont("Arial", 24, bold=True)
-        self.font_small = pygame.font.SysFont("Arial", 18, bold=True)
+        self.font_large = load_font(32, bold=True)
+        self.font_medium = load_font(24, bold=True)
+        self.font_small = load_font(18, bold=True)
 
     def draw(self, state):
         self.screen.fill((5, 8, 12))
@@ -66,8 +67,22 @@ class SCMSDisplay:
         )
 
     def draw_panel(self, rect, title):
-        pygame.draw.rect(self.screen, (14, 18, 24), rect)
-        pygame.draw.rect(self.screen, (245, 245, 245), rect, 2)
+        corner_radius = 8
+
+        pygame.draw.rect(
+            self.screen,
+            (14, 18, 24),
+            rect,
+            border_radius=corner_radius,
+        )
+
+        pygame.draw.rect(
+            self.screen,
+            (245, 245, 245),
+            rect,
+            width=2,
+            border_radius=corner_radius,
+        )
 
         title_surface = self.font_small.render(title, True, (0, 220, 255))
         self.screen.blit(title_surface, (rect.x + 12, rect.y + 10))
