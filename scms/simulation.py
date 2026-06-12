@@ -18,9 +18,12 @@ class Simulation:
     def __init__(self):
         wing = wingGeometry(span=64.8, chord=6.98, deployment = 0.50)
 
+        initial_altitude_m = 13500.0
+        initial_velocity_mps = 360
+
         aero_state = aerodynamicState(
-            rho=0.380,
-            velocity=289,
+            rho=aero.air_density_at_altitude(initial_altitude_m),
+            velocity=initial_velocity_mps,
             wing=wing,
             cl0=0.2,
             cd0=0.02,
@@ -33,7 +36,7 @@ class Simulation:
 
         controller = altitudeHoldController(
             trimAlphaRad=aero_state.alphaRad,
-            targetAltitude=12496.8,
+            targetAltitude=initial_altitude_m,
         )
 
         self.sim = flightSimulation(
@@ -41,7 +44,7 @@ class Simulation:
             plane=plane,
             controller=controller,
             maxThrust=max_thrust,
-            altitude=12496.8,
+            altitude=initial_altitude_m,
             velocityY=0,
         )
 

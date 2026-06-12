@@ -68,9 +68,6 @@ def draw_envelope_plot(screen, rect, state, font_small):
     pygame.draw.circle(screen, (245, 245, 245), current_point, 11, 2)
     pygame.draw.circle(screen, (240, 205, 40), future_point, 5)
 
-    now_surface = font_small.render("NOW", True, (0, 220, 255))
-    screen.blit(now_surface, (current_point[0] + 12, current_point[1] - 12))
-
     future_surface = font_small.render("+60s", True, (240, 205, 40))
     screen.blit(future_surface, (future_point[0] + 10, future_point[1] - 10))
 
@@ -85,7 +82,7 @@ def draw_envelope_plot(screen, rect, state, font_small):
     )
 
     altitude_label = font_small.render("ALTITUDE", True, (245, 245, 245))
-    screen.blit(altitude_label, (rect.x + 10, plot_rect.y - 26))
+    screen.blit(altitude_label, (rect.x + 10, plot_rect.y - 29))
 
     draw_axis_labels(
         screen,

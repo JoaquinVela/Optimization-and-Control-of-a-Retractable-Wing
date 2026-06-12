@@ -3,6 +3,7 @@ from scms.state import create_initial_state
 from scms.simulation import Simulation
 from scms.simulation_adapter import apply_simulation_sample
 from scms.display import SCMSDisplay
+from scms.widgets.manual_controls import ManualControlsWindow
 
 def main():
     pygame.init()
@@ -11,6 +12,7 @@ def main():
 
     clock = pygame.time.Clock()
     display = SCMSDisplay(screen)
+    manual_controls_window = ManualControlsWindow()
     display_state = create_initial_state()
     simulation = Simulation()
 
@@ -48,9 +50,16 @@ def main():
         sample = simulation.step(dt)
         apply_simulation_sample(display_state, sample, dt)
 
+        if display_state.get("auto_optimization_enabled", True):
+            manual_controls_window.hide()
+        else:
+            manual_controls_window.show()
+            manual_controls_window.draw(display_state)
+
         display.draw(display_state)
         pygame.display.flip()
 
+    manual_controls_window.hide()
     pygame.quit()
 
 if __name__ == "__main__":

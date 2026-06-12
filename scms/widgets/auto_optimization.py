@@ -37,5 +37,5 @@ def draw_auto_optimization(screen, rect, state, font_medium, font_small):
         y = rect.y + 48
         for line in lines:
             surface = font_small.render(line, True, (245, 245, 245))
-            screen.blit(surface, (x, y))
+            screen.blit(surface, (x + 33, y))
             y += 28

@@ -11,7 +11,7 @@ from src.models.boomless import boomlessConstraint
 from src.models.aero_c import aero
 
 class cruiseSchedule:
-    def __init__(self, targetAltitude=None, maxAltitude=12496.8, minDeployment=0.3, maxDeployment=1.0, altitudeStep=100.0, deploymentStep=0.00025, minCutoffAltitudeAGL=30, boomlessSafetyMargin=100):
+    def __init__(self, targetAltitude=None, maxAltitude=13716.0, minDeployment=0.3, maxDeployment=1.0, altitudeStep=100.0, deploymentStep=0.00025, minCutoffAltitudeAGL=30, boomlessSafetyMargin=100):
         self.targetAltitude = targetAltitude if targetAltitude is not None else maxAltitude
         self.maxAltitude = maxAltitude
         self.minDeployment = minDeployment
